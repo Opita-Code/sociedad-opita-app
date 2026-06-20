@@ -1,188 +1,33 @@
 ---
 import Layout from '../layouts/Layout.astro';
-
-/**
- * Sociedad Opita — Home (Monumento Cultural Vivo)
- *
- * Las 4 dimensiones para HABITAR el pueblo de Tello:
- * - Ventana: observar el pueblo correr en tiempo real
- * - Puente: conversar con los personajes
- * - Réplica: extender a otros municipios
- * - Taller: el detrás de escena académico
- *
- * NO engagement. NO niveles. NO mecánicas de juego.
- * Solo HABITAR un pueblo que se niega a morir.
- */
-
-const dimensiones = [
-  {
-    href: "/ventana",
-    titulo: "La Ventana",
-    subtitulo: "Mira el pueblo correr",
-    descripcion: "El reloj virtual de Tello avanza. Doña Rosa abre la tienda a las 6. Don Rosalío revisa el ganado. El cura entra a la iglesia. Los chismes se propagan por la plaza. Tú observas desde afuera, como en una plaza real.",
-    color: "tierra",
-    icono: "ventana",
-  },
-  {
-    href: "/puente",
-    titulo: "El Puente",
-    subtitulo: "Háblale a sus personajes",
-    descripcion: "Don Cecilio te habla de Dios y del pueblo. Doña Rosa te fía una panela. Jhon Fredy te cuenta por qué se fue a Bogotá y por qué volvió. Les preguntas lo que quieras. Ellos te responden en opita, con sus muletillas, con sus modos.",
-    color: "magdalena",
-    icono: "puente",
-  },
-  {
-    href: "/replica",
-    tititulo: "La Réplica",
-    subtitulo: "Extiende el monumento a tu municipio",
-    descripcion: "Si tu pueblo también merece ser preservado, replica el simulador. Universidad de Garzón, alcaldía de Pitalito, personería de La Plata. El método es abierto, la data es tuya, el código es tuyo.",
-    color: "plaza",
-    icono: "replica",
-  },
-  {
-    href: "/taller",
-    titulo: "El Taller",
-    subtitulo: "El detrás de escena académico",
-    descripcion: "El paper, los 10 diálogos validados por hablante nativo, los 41 perfiles psicométricos, la metodología forense. Para investigadores, periodistas, sociólogos. La evidencia de que preservar una forma de hablar es un acto de soberanía cultural.",
-    color: "cafe",
-    icono: "taller",
-  },
-];
 ---
 
-<Layout title="Sociedad Opita — el primer monumento digital vivo del opita">
-  <main class="max-w-5xl mx-auto px-6 py-16 md:py-24">
-    <!-- Hero -->
-    <header class="text-center mb-20">
-      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-4">
-        Tello, Huila · Colombia
-      </p>
-      <h1 class="text-5xl md:text-7xl font-serif text-opita-cafe mb-6 leading-tight">
-        Sociedad Opita
-      </h1>
-      <p class="text-2xl md:text-3xl text-opita-tierra mb-8 font-serif italic">
-        el primer monumento digital vivo de una comunidad colombiana
-      </p>
-      <p class="text-lg md:text-xl text-opita-cafe/80 max-w-3xl mx-auto leading-relaxed">
-        Tello tiene 12.908 habitantes. 41 de ellos están aquí, documentados con
-        <em>Big Five</em>, <em>Lomnitz</em> y <em>Dunbar</em>, simulados con
-        inteligencia artificial, validados por un hablante nativo del dialecto <em>opita</em>.
-        Te estamos dejando asomarte.
-      </p>
-    </header>
-
-    <!-- El hallazgo: Doña Rosa -->
-    <section class="bg-opita-arena/50 border-l-4 border-opita-tierra rounded-r-lg p-8 md:p-10 mb-20">
-      <p class="text-sm uppercase tracking-wider text-opita-tierra mb-3">
-        El hallazgo
-      </p>
-      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-4">
-        Doña Rosa controla los chismes del pueblo
-      </h2>
-      <p class="text-lg text-opita-cafe/80 leading-relaxed mb-4">
-        No es la más popular. No es la más habladora. Doña Rosa, la tendera,
-        es la <strong>super-spreader #1</strong> de la red social de Tello
-        porque su tienda queda en la <em>intersección geométrica</em> del pueblo.
-        Su <em>betweenness centrality</em> es 0.55. La del cura es 0.12.
-        La geometría del pueblo predice el flujo de información mejor que la psicología.
-      </p>
-      <p class="text-base text-opita-tierra italic">
-        — Descubrimiento documentado en <a href="https://github.com/nicourrutia98/sociedad-opita" class="underline hover:text-opita-verriondo">el paper académico</a>, replicable con los datos abiertos.
-      </p>
-    </section>
-
-    <!-- Las 4 dimensiones -->
-    <section class="mb-20">
-      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3 text-center">
-        Cuatro formas de habitar el pueblo
-      </p>
-      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe text-center mb-12">
-        No es un juego. Es un monumento.
-      </h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {dimensiones.map((dim) => (
-          <a
-            href={dim.href}
-            class={`block bg-white border-2 border-opita-${dim.color} rounded-lg p-8 hover:shadow-xl transition-shadow duration-300 group`}
-          >
-            <div class="flex items-start gap-4 mb-4">
-              <div class={`flex-shrink-0 w-12 h-12 rounded-full bg-opita-${dim.color} text-white flex items-center justify-center font-serif text-xl`}>
-                {dim.titulo.charAt(3)}
-              </div>
-              <div>
-                <h3 class={`text-2xl font-serif text-opita-${dim.color} mb-1`}>
-                  {dim.titulo}
-                </h3>
-                <p class="text-sm uppercase tracking-wider text-opita-tierra">
-                  {dim.subtitulo}
-                </p>
-              </div>
-            </div>
-            <p class="text-base text-opita-cafe/80 leading-relaxed">
-              {dim.descripcion}
-            </p>
-            <p class={`mt-4 text-sm text-opita-${dim.color} group-hover:underline`}>
-              Entrar a {dim.titulo.toLowerCase()} →
-            </p>
-          </a>
-        ))}
-      </div>
-    </section>
-
-    <!-- El pueblo en números -->
-    <section class="bg-opita-cafe text-opita-arena rounded-lg p-10 md:p-14 mb-20">
-      <p class="text-sm uppercase tracking-widest text-opita-arena/70 mb-3 text-center">
-        El pueblo en números
-      </p>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-        <div>
-          <p class="text-4xl md:text-5xl font-serif text-opita-arena mb-2">41</p>
-          <p class="text-sm uppercase tracking-wider text-opita-arena/70">personas documentadas</p>
-        </div>
-        <div>
-          <p class="text-4xl md:text-5xl font-serif text-opita-arena mb-2">34</p>
-          <p class="text-sm uppercase tracking-wider text-opita-arena/70">edificios georreferenciados</p>
-        </div>
-        <div>
-          <p class="text-4xl md:text-5xl font-serif text-opita-arena mb-2">10</p>
-          <p class="text-sm uppercase tracking-wider text-opita-arena/70">diálogos validados por nativo</p>
-        </div>
-        <div>
-          <p class="text-4xl md:text-5xl font-serif text-opita-arena mb-2">7</p>
-          <p class="text-sm uppercase tracking-wider text-opita-arena/70">capas sociolingüísticas</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- La promesa -->
-    <section class="text-center max-w-3xl mx-auto mb-20">
-      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
-        La promesa
-      </p>
-      <p class="text-2xl md:text-3xl font-serif text-opita-cafe leading-snug mb-6">
-        Hecho por un nativo huilense, en el Huila, con IA,
-        <br />
-        para que Tello no se muera cuando los pelaos se vayan pa' Bogotá.
-      </p>
-      <p class="text-base text-opita-cafe/70">
-        Sociedad Opita es un proyecto personal de Juan Nicolás Urrutia Salcedo.
-        Código abierto. Datos abiertos. Idioma preservado.
-      </p>
-    </section>
-
-    <!-- Coming-soon: las otras páginas -->
-    <section class="border-t border-opita-hueso pt-10 text-center text-sm text-opita-cafe/60">
-      <p>
-        Mientras construimos las cuatro dimensiones completas, puedes leer el
-        <a href="https://github.com/nicourrutia98/sociedad-opita" class="underline hover:text-opita-tierra">
-          paper académico
-        </a>
-        o visitar el
-        <a href="/pronto" class="underline hover:text-opita-tierra">
-          coming-soon de la versión anterior
-        </a>.
-      </p>
-    </section>
+<Layout title="Sociedad Opita — Próximamente">
+  <main class="max-w-2xl mx-auto px-6 py-24">
+    <h1 class="text-5xl font-serif text-opita-tierra mb-4">Sociedad Opita</h1>
+    <p class="text-xl mb-6">
+      El primer monumento digital vivo de una comunidad colombiana.
+    </p>
+    <p class="text-lg mb-6 leading-relaxed">
+      Tello, Huila. Sus 41 personas. Sus chismes. Su tinto de las 6 AM.
+      Te estamos dejando asomarte. Muy pronto.
+    </p>
+    <p class="text-base mb-8 leading-relaxed text-opita-tierra">
+      Mientras construimos, puedes leer el
+      <a
+        href="https://github.com/nicourrutia98/sociedad-opita"
+        class="underline hover:text-opita-verriondo"
+      >
+        paper académico
+      </a>
+      o visitar el
+      <a href="/forense" class="underline hover:text-opita-verriondo">
+        mapa forense de la versión anterior
+      </a>.
+    </p>
+    <p class="text-sm italic text-opita-tierra">
+      Hecho por un nativo huilense, en el Huila, con IA, para que Tello no se muera
+      cuando los pelaos se vayan pa' Bogotá.
+    </p>
   </main>
 </Layout>
