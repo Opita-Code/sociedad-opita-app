@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@opita/ocais": "github:Opita-Code/ocais#master",
+    "@opita/ocais": "github:Opita-Code/ocais#v2.0.0",
     "@aws-sdk/client-dynamodb": "^3.600.0",
     "@aws-sdk/lib-dynamodb": "^3.600.0",
     "dotenv": "^17.4.2",
