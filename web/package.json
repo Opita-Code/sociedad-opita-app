@@ -1,0 +1,33 @@
+{
+  "name": "sociedad-opita-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Monumento digital vivo del opita — frontend Astro 6 + Tailwind 4",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check && tsc --noEmit",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/react": "^5.0.4",
+    "@tailwindcss/vite": "^4.3.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^6.3.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^5.7.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.0"
+  }
+}

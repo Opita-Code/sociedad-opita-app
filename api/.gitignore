@@ -1,0 +1,28 @@
+# SST
+.sst/
+
+# deps
+node_modules/
+
+# env
+.env
+.env.local
+.env.production
+
+# build
+dist/
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# editor
+.vscode/
+.idea/
+.DS_Store
+
+# test
+coverage/

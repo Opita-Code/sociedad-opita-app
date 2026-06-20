@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  /* Paleta del opita — extraida del branding Sociedad Opita */
+  --color-opita-tierra: #6b3e2e;
+  --color-opita-adobe: #a87856;
+  --color-opita-arena: #faf6ed;
+  --color-opita-hueso: #d7ccc8;
+  --color-opita-cafe: #2c1810;
+  --color-opita-plaza: #b8d4a0;
+  --color-opita-magdalena: #6892b0;
+  --color-opita-verriondo: #8b5a3c;
+
+  --font-serif: Georgia, "Times New Roman", serif;
+  --font-sans: system-ui, -apple-system, sans-serif;
+}
+
+html {
+  font-family: var(--font-serif);
+  color: var(--color-opita-cafe);
+  background: var(--color-opita-arena);
+}
+
+body {
+  min-height: 100vh;
+}
