@@ -4,9 +4,14 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
+  ogType?: string;
 }
 
-const { title, description = 'Sociedad Opita — el primer monumento digital vivo de una comunidad colombiana. Tello, Huila.' } = Astro.props;
+const {
+  title,
+  description = 'Sociedad Opita — el primer monumento digital vivo de una comunidad colombiana. Tello, Huila.',
+  ogType = 'website',
+} = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -15,11 +20,18 @@ const { title, description = 'Sociedad Opita — el primer monumento digital viv
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <link rel="canonical" href={Astro.url.href} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#6b3e2e" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content="https://sociedad.opitacode.com/og-image.jpg" />
-    <meta property="og:url" content="https://sociedad.opitacode.com" />
-    <meta property="og:type" content="website" />
+    <meta property="og:image" content={new URL('/og-image.jpg', Astro.url).href} />
+    <meta property="og:url" content={Astro.url.href} />
+    <meta property="og:type" content={ogType} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL('/og-image.jpg', Astro.url).href} />
     <title>{title}</title>
   </head>
   <body class="min-h-screen bg-opita-arena text-opita-cafe">

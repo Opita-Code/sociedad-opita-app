@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /pronto/
+
+Sitemap: https://sociedad.opitacode.com/sitemap.xml
