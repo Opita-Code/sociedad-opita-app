@@ -1,0 +1,62 @@
+name: Deploy Web (sociedad.opitacode.com)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - '.github/workflows/deploy-web.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        working-directory: web
+        run: npm install --no-audit --no-fund
+
+      - name: Build Astro
+        working-directory: web
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # El bucket para sociedad.opitacode.com es separado del www.opitacode.com principal.
+      # Sube aca cuando el bucket sea creado. Mientras, este workflow fallara
+      # hasta que se cree el bucket sociedad.opitacode.com en S3 con policy
+      # de acceso desde CloudFront.
+      - name: Deploy to S3
+        working-directory: web/dist
+        run: |
+          if aws s3 ls "s3://sociedad.opitacode.com" 2>/dev/null; then
+            aws s3 sync . "s3://sociedad.opitacode.com" --delete --cache-control "max-age=14400"
+          else
+            echo "::warning::Bucket s3://sociedad.opitacode.com no existe. Crear primero via SST o CloudFormation."
+          fi
+
+      # CloudFront distribution ID se obtendra del SST stack output.
+      # Mientras, se omite el invalidation para no fallar.
+      - name: Invalidate CloudFront cache
+        run: |
+          CF_DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[?contains(@, 'sociedad.opitacode.com')]].Id" --output text | head -1)
+          if [ -n "$CF_DIST_ID" ]; then
+            aws cloudfront create-invalidation --distribution-id "$CF_DIST_ID" --paths "/*"
+          else
+            echo "::warning::CloudFront distribution para sociedad.opitacode.com no encontrada"
+          fi
+        continue-on-error: true
