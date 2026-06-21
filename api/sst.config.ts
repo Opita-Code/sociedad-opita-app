@@ -41,14 +41,38 @@ export default $config({
       primaryIndex: { hashKey: "ciudadId", rangeKey: "personaId" },
     });
 
+    // ─── State Table (single-table, PR #7) ──────────────────────
+    //   pk     = ENTITY#<TYPE>#<id>          (PERSONA | CONV | EVENT)
+    //   sk     = <subkey>                   (STATE, MSG#<iso>, personaId)
+    //   GSI1 byPersona: hashKey=personaId, rangeKey=sk  — events per persona
+    //   GSI2 byTime:    hashKey=tsBucket,   rangeKey=ts  — ventana events per month
+    //   TTL on CONV items: `expiresAt` epoch seconds, 90 days.
+    const stateTable = new sst.aws.Dynamo("SociedadOpitaState", {
+      fields: {
+        pk: "string",
+        sk: "string",
+        personaId: "string", // GSI1 hashKey
+        tsBucket: "string",  // GSI2 hashKey
+        ts: "string",        // GSI2 rangeKey
+        expiresAt: "number", // TTL (epoch seconds)
+      },
+      primaryIndex: { hashKey: "pk", rangeKey: "sk" },
+      globalIndexes: {
+        byPersona: { hashKey: "personaId", rangeKey: "sk" },
+        byTime: { hashKey: "tsBucket", rangeKey: "ts" },
+      },
+      ttl: "expiresAt",
+    });
+
     // ─── API Handler (Hono on Lambda) ───────────────────────────
     const apiFn = new sst.aws.Function("ApiFn", {
       url: true,
       handler: "src/api.handler",
-      link: [sessionsTable, personasTable],
+      link: [sessionsTable, personasTable, stateTable],
       environment: {
         DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || "",
         DEEPSEEK_BASE_URL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1",
+        DDB_TABLE: stateTable.name,
         STAGE: $app.stage,
       },
       memory: "512 MB",
@@ -70,6 +94,7 @@ export default $config({
       RouterUrl: router.url,
       SessionsTable: sessionsTable.name,
       PersonasTable: personasTable.name,
+      StateTable: stateTable.name,
     };
   },
 });
