@@ -27,8 +27,6 @@
  * the table at the bottom of `DEPLOY-RUNBOOK.md` is the source of truth.
  */
 
-export type PeriodSeconds = 10 | 30 | 60 | 120 | 300 | 600 | 1800 | 3600 | 7200 | 86400;
-
 export type AlarmThreshold = {
   readonly name: string;
   readonly description: string;

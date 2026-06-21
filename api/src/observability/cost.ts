@@ -50,7 +50,7 @@ class CostTracker {
    * zero-cost row is just noise.
    */
   recordInvocation(record: CostRecord): void {
-    if (!record.tokens_out || record.tokens_out <= 0) return;
+    if (!record.tokens_out) return;
 
     const text = tokensOutToText(record.tokens_out);
     const costUsd = estimateCost(text, record.model);
