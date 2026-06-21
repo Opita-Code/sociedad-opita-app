@@ -20,6 +20,10 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*", "sst.config.ts", "alarms.config.ts", "tests/**/*"],
-  "exclude": ["node_modules", ".sst"]
+  "include": ["src/**/*", "alarms.config.ts", "tests/**/*"],
+  "exclude": [
+    "node_modules",
+    ".sst",
+    "sst.config.ts"
+  ]
 }

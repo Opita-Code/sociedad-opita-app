@@ -55,15 +55,18 @@ describe("cost — recordInvocation logging", () => {
       cost.recordInvocation({ model: "deepseek-chat", tokens_out: 400 })
     );
     expect(logs).toHaveLength(1);
-    expect(logs[0].event).toBe("cost.recorded");
-    expect(logs[0].level).toBe("info");
+    // Polish R11: `!` after the length-1 assertion above so
+    // `noUncheckedIndexedAccess` is satisfied — `logs[0]` is typed
+    // as `T | undefined` under strict mode.
+    expect(logs[0]!.event).toBe("cost.recorded");
+    expect(logs[0]!.level).toBe("info");
   });
 
   it("includes model, tokens_out, and computed cost_usd in the context", () => {
     const { logs } = captureAll(() =>
       cost.recordInvocation({ model: "deepseek-chat", tokens_out: 400 })
     );
-    const ctx = logs[0].context;
+    const ctx = logs[0]!.context;
     expect(ctx.model).toBe("deepseek-chat");
     expect(ctx.tokens_out).toBe(400);
     // cost_usd must be a finite non-negative number.
@@ -78,8 +81,8 @@ describe("cost — recordInvocation logging", () => {
     const { logs: reasonerLogs } = captureAll(() =>
       cost.recordInvocation({ model: "deepseek-reasoner", tokens_out: 4000 })
     );
-    const chatCost = chatLogs[0].context.cost_usd as number;
-    const reasonerCost = reasonerLogs[0].context.cost_usd as number;
+    const chatCost = chatLogs[0]!.context.cost_usd as number;
+    const reasonerCost = reasonerLogs[0]!.context.cost_usd as number;
     // 4000 tokens × $0.14/1M = $0.00056
     expect(chatCost).toBeCloseTo(0.00056, 8);
     // 4000 × $2.19/1M = $0.00876
@@ -96,16 +99,16 @@ describe("cost — recordInvocation logging", () => {
         persona_id: "dona_rosa_tendera",
       })
     );
-    expect(logs[0].context.conv_id).toBe("conv-abc");
-    expect(logs[0].context.persona_id).toBe("dona_rosa_tendera");
+    expect(logs[0]!.context.conv_id).toBe("conv-abc");
+    expect(logs[0]!.context.persona_id).toBe("dona_rosa_tendera");
   });
 
   it("treats missing conv_id and persona_id as optional (no crash)", () => {
     const { logs } = captureAll(() =>
       cost.recordInvocation({ model: "deepseek-chat", tokens_out: 100 })
     );
-    expect(logs[0].context.conv_id).toBeUndefined();
-    expect(logs[0].context.persona_id).toBeUndefined();
+    expect(logs[0]!.context.conv_id).toBeUndefined();
+    expect(logs[0]!.context.persona_id).toBeUndefined();
   });
 
   it("does not log when tokens_out is 0 (zero cost = no record)", () => {
@@ -130,9 +133,11 @@ describe("cost — metrics emission", () => {
     expect(emf).toBeDefined();
     expect((emf as Record<string, unknown>)["cost_usd"]).toBeGreaterThan(0);
     expect((emf as Record<string, unknown>).model).toBe("deepseek-chat");
-    const cm = (emf as { _aws: { CloudWatchMetrics: { Metrics: Array<{ Name: string; Unit: string }> } } })._aws.CloudWatchMetrics;
-    expect(cm.Metrics[0].Name).toBe("cost_usd");
-    expect(cm.Metrics[0].Unit).toBe("Milliseconds"); // EMF unit, not cost unit; duration_ms convention
+    const cm = (
+      emf as { _aws: { CloudWatchMetrics: { Metrics: Array<{ Name: string; Unit: string }> } } }
+    )._aws.CloudWatchMetrics;
+    expect(cm.Metrics[0]!.Name).toBe("cost_usd");
+    expect(cm.Metrics[0]!.Unit).toBe("Milliseconds"); // EMF unit, not cost unit; duration_ms convention
     spy.mockRestore();
   });
 });
@@ -168,7 +173,7 @@ describe("cost — dailyAggregate helper", () => {
 
 describe("cost — monthlyProjection helper", () => {
   it("multiplies daily total by 30 (operator back-of-envelope)", () => {
-    expect(monthlyProjection(0.10)).toBeCloseTo(3.0, 10);
+    expect(monthlyProjection(0.1)).toBeCloseTo(3.0, 10);
     expect(monthlyProjection(0.0001)).toBeCloseTo(0.003, 10);
   });
 

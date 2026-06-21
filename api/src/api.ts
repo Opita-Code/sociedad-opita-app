@@ -49,6 +49,10 @@ app.use("*", async (c, next) => {
   c.header("Access-Control-Max-Age", "600");
   if (c.req.method === "OPTIONS") return c.body(null, 204);
   await next();
+  // Polish R11: explicit return so `noImplicitReturns` is satisfied —
+  // the OPTIONS branch above returns Response, this branch falls
+  // through to `undefined` and strict mode wants it spelled out.
+  return;
 });
 
 // Polish R6 (observability): structured logger + CloudWatch EMF metrics.
@@ -195,7 +199,11 @@ export { app as honoApp };
 export const handler = async (event: any) => {
   const { method, path } = parseEvent(event);
   const headers = parseHeaders(event);
-  const body = event.body ? (event.isBase64Encoded ? Buffer.from(event.body, "base64").toString() : event.body) : undefined;
+  const body = event.body
+    ? event.isBase64Encoded
+      ? Buffer.from(event.body, "base64").toString()
+      : event.body
+    : undefined;
 
   const url = new URL(path, "https://sociedad.opitacode.com");
   const req = new Request(url.toString(), {
