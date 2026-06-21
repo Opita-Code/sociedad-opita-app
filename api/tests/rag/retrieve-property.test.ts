@@ -41,7 +41,7 @@ function float32Vector(dim: number, maxAbs: number = 1.0) {
       {
         minLength: dim,
         maxLength: dim,
-      },
+      }
     )
     .filter((arr) => arr.some((v) => v !== 0))
     .map((arr) => Float32Array.from(arr));
@@ -59,13 +59,13 @@ const arbCorpus = (size: number) =>
         score: fc.double({ min: -1, max: 1, noNaN: true }).map(Math.fround),
         label: fc.string({ minLength: 1, maxLength: 20 }),
       }),
-      { minLength: size, maxLength: size },
+      { minLength: size, maxLength: size }
     )
     .map((items) =>
       items.map((it, i) => ({
         score: it.score,
         label: it.label + i,
-      })),
+      }))
     );
 
 // ── cosine() properties ───────────────────────────────────────────
@@ -78,7 +78,7 @@ describe("cosine() — property-based", () => {
         // Allow FP epsilon drift.
         expect(Math.abs(c - 1)).toBeLessThan(1e-5);
       }),
-      { numRuns: 50 },
+      { numRuns: 50 }
     );
   });
 
@@ -89,7 +89,7 @@ describe("cosine() — property-based", () => {
         expect(Math.abs(c)).toBeLessThanOrEqual(1 + 1e-5);
         expect(Number.isFinite(c)).toBe(true);
       }),
-      { numRuns: 50 },
+      { numRuns: 50 }
     );
   });
 
@@ -101,7 +101,7 @@ describe("cosine() — property-based", () => {
         // Allow 1 ULP of FP epsilon drift.
         expect(Math.abs(c1 - c2)).toBeLessThan(1e-5);
       }),
-      { numRuns: 50 },
+      { numRuns: 50 }
     );
   });
 
@@ -113,7 +113,7 @@ describe("cosine() — property-based", () => {
         // a / 0 in float is 0, so the result is 0 (not NaN).
         expect(Number.isFinite(c)).toBe(true);
       }),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 
@@ -130,9 +130,9 @@ describe("cosine() — property-based", () => {
           const c2 = cosine(scaled, b);
           // Allow larger drift since FP multiplies compound.
           expect(Math.abs(c1 - c2)).toBeLessThan(1e-3);
-        },
+        }
       ),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 
@@ -151,7 +151,7 @@ describe("cosine() — property-based", () => {
         expect(cosine(a, a)).toBeCloseTo(dot, 4);
         expect(dot).toBeCloseTo(1.0, 4);
       }),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 });
@@ -161,32 +161,24 @@ describe("cosine() — property-based", () => {
 describe("topK() — property-based", () => {
   it("returns at most k items", () => {
     fc.assert(
-      fc.property(
-        arbCorpus(20),
-        fc.integer({ min: 1, max: 25 }),
-        (items, k) => {
-          const r = topK(items, k);
-          expect(r.length).toBeLessThanOrEqual(k);
-          expect(r.length).toBeLessThanOrEqual(items.length);
-        },
-      ),
-      { numRuns: 30 },
+      fc.property(arbCorpus(20), fc.integer({ min: 1, max: 25 }), (items, k) => {
+        const r = topK(items, k);
+        expect(r.length).toBeLessThanOrEqual(k);
+        expect(r.length).toBeLessThanOrEqual(items.length);
+      }),
+      { numRuns: 30 }
     );
   });
 
   it("returns items sorted by score descending", () => {
     fc.assert(
-      fc.property(
-        arbCorpus(20),
-        fc.integer({ min: 1, max: 10 }),
-        (items, k) => {
-          const r = topK(items, k);
-          for (let i = 1; i < r.length; i++) {
-            expect(r[i - 1]!.score).toBeGreaterThanOrEqual(r[i]!.score);
-          }
-        },
-      ),
-      { numRuns: 30 },
+      fc.property(arbCorpus(20), fc.integer({ min: 1, max: 10 }), (items, k) => {
+        const r = topK(items, k);
+        for (let i = 1; i < r.length; i++) {
+          expect(r[i - 1]!.score).toBeGreaterThanOrEqual(r[i]!.score);
+        }
+      }),
+      { numRuns: 30 }
     );
   });
 
@@ -196,7 +188,7 @@ describe("topK() — property-based", () => {
         const r = topK(items, k);
         expect(r).toHaveLength(items.length);
       }),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 
@@ -208,7 +200,7 @@ describe("topK() — property-based", () => {
         expect(r1.map((x) => x.score)).toEqual(r2.map((x) => x.score));
         expect(r1.map((x) => x.label)).toEqual(r2.map((x) => x.label));
       }),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 
@@ -220,7 +212,7 @@ describe("topK() — property-based", () => {
         const maxScore = Math.max(...items.map((x) => x.score));
         expect(r[0]!.score).toBeCloseTo(maxScore, 6);
       }),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 
@@ -232,7 +224,7 @@ describe("topK() — property-based", () => {
           expect(Number.isFinite(x.score)).toBe(true);
         }
       }),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 
@@ -242,7 +234,7 @@ describe("topK() — property-based", () => {
         const r = topK(items, 0);
         expect(r).toEqual([]);
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
@@ -252,7 +244,7 @@ describe("topK() — property-based", () => {
         const r = topK([], k);
         expect(r).toEqual([]);
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 });
@@ -262,10 +254,9 @@ describe("topK() — property-based", () => {
 describe("retrieve() — property-based", () => {
   // Generate a synthetic corpus: each doc has a random 8-d embedding
   // and a synthetic metadata block.
-  const arbCorpusDocs = fc
-    .array(arbVecSmall, { minLength: 5, maxLength: 30 })
-    .map((vecs) =>
-      vecs.map((v, i): CorpusDoc => ({
+  const arbCorpusDocs = fc.array(arbVecSmall, { minLength: 5, maxLength: 30 }).map((vecs) =>
+    vecs.map(
+      (v, i): CorpusDoc => ({
         id: `synth-${i}`,
         text: `synthetic doc ${i}`,
         embedding: Array.from(v),
@@ -276,8 +267,9 @@ describe("retrieve() — property-based", () => {
           tier: "free",
           language: "es",
         },
-      })),
-    );
+      })
+    )
+  );
 
   it("returns at most k results", () => {
     fc.assert(
@@ -285,7 +277,7 @@ describe("retrieve() — property-based", () => {
         const r = retrieve(q, corpus, k);
         expect(r.length).toBeLessThanOrEqual(Math.min(k, corpus.length));
       }),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 
@@ -299,7 +291,7 @@ describe("retrieve() — property-based", () => {
           expect(Number.isFinite(x.score)).toBe(true);
         }
       }),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 
@@ -311,7 +303,7 @@ describe("retrieve() — property-based", () => {
           expect(r[i - 1]!.score).toBeGreaterThanOrEqual(r[i]!.score);
         }
       }),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 
@@ -334,7 +326,7 @@ describe("retrieve() — property-based", () => {
         const ids = new Set(corpus.map((d) => d.id));
         expect(ids.has(r[0]!.doc.id)).toBe(true);
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
@@ -344,7 +336,7 @@ describe("retrieve() — property-based", () => {
         const r = retrieve(q, [], k);
         expect(r).toEqual([]);
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
@@ -357,7 +349,7 @@ describe("retrieve() — property-based", () => {
           expect(ids.has(x.doc.id)).toBe(true);
         }
       }),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 });

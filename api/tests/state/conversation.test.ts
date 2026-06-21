@@ -22,11 +22,7 @@ vi.mock("../../src/state/dynamo-client", () => ({
 }));
 
 import { appendTurn, getConversation } from "../../src/state/conversation";
-import {
-  KEYS,
-  convTtlEpoch,
-  type ConversationTurn,
-} from "../../src/state/schema";
+import { KEYS, convTtlEpoch, type ConversationTurn } from "../../src/state/schema";
 
 beforeEach(() => {
   putItemMock.mockReset();
@@ -55,12 +51,8 @@ describe("appendTurn()", () => {
       content: "Hola",
     });
     const written = putItemPayload();
-    expect(written.pk).toBe(
-      KEYS.conversationMessage("conv-1", "2025-06-21T12:00:00Z").pk,
-    );
-    expect(written.sk).toBe(
-      KEYS.conversationMessage("conv-1", "2025-06-21T12:00:00Z").sk,
-    );
+    expect(written.pk).toBe(KEYS.conversationMessage("conv-1", "2025-06-21T12:00:00Z").pk);
+    expect(written.sk).toBe(KEYS.conversationMessage("conv-1", "2025-06-21T12:00:00Z").sk);
     expect(written.role).toBe("user");
     expect(written.content).toBe("Hola");
   });

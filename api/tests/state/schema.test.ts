@@ -35,9 +35,7 @@ describe("schema constants", () => {
 
 describe("pk()", () => {
   it("builds pk for PERSONA entity", () => {
-    expect(pk("PERSONA", "don_rosalio_ganadero")).toBe(
-      "ENTITY#PERSONA#don_rosalio_ganadero",
-    );
+    expect(pk("PERSONA", "don_rosalio_ganadero")).toBe("ENTITY#PERSONA#don_rosalio_ganadero");
   });
 
   it("builds pk for CONV entity", () => {
@@ -67,9 +65,7 @@ describe("sk()", () => {
   });
 
   it("returns subkey#suffix when suffix provided", () => {
-    expect(sk("MSG", "2025-06-21T12:00:00.000Z")).toBe(
-      "MSG#2025-06-21T12:00:00.000Z",
-    );
+    expect(sk("MSG", "2025-06-21T12:00:00.000Z")).toBe("MSG#2025-06-21T12:00:00.000Z");
   });
 
   it("handles empty suffix by treating it as no suffix", () => {
@@ -204,13 +200,7 @@ describe("type definitions (compile-time)", () => {
   });
 
   it("VentanaEvent type accepts all valid location types", () => {
-    const types: VentanaEvent["type"][] = [
-      "tienda",
-      "iglesia",
-      "plaza",
-      "finca",
-      "otro",
-    ];
+    const types: VentanaEvent["type"][] = ["tienda", "iglesia", "plaza", "finca", "otro"];
     for (const t of types) {
       const event: VentanaEvent = {
         ts: "2025-06-21T12:00:00Z",

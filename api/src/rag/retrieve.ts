@@ -68,7 +68,7 @@ export function topK<T extends { score: number }>(items: T[], k: number = 4): T[
  */
 export async function loadCorpusFromBuffer(
   gz: Uint8Array,
-  pathHint?: string,
+  pathHint?: string
 ): Promise<CorpusDoc[]> {
   const label = pathHint ?? "<buffer>";
   let json: string;
@@ -117,7 +117,7 @@ export async function loadCorpus(path: string): Promise<CorpusDoc[]> {
 export function retrieve(
   queryEmbedding: Float32Array,
   corpus: CorpusDoc[],
-  k: number = 4,
+  k: number = 4
 ): RetrievalResult[] {
   const scored = corpus.map((doc) => ({
     doc,

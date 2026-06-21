@@ -47,11 +47,13 @@ export async function observabilityMiddleware(c: Context, next: Next): Promise<v
     const isError = status >= 500;
 
     if (isError) {
-      logger.error(
-        "request.error",
-        new Error(`HTTP ${status} from ${route}`),
-        { route, method, ip, status, duration_ms }
-      );
+      logger.error("request.error", new Error(`HTTP ${status} from ${route}`), {
+        route,
+        method,
+        ip,
+        status,
+        duration_ms,
+      });
       metrics.increment("errors_total", 1, {
         route,
         method,
@@ -82,11 +84,7 @@ export async function observabilityMiddleware(c: Context, next: Next): Promise<v
     // so we can't read c.res.status — log + emit error telemetry and
     // re-throw so a 500 still surfaces.
     const duration_ms = performance.now() - start;
-    logger.error(
-      "request.error",
-      err as Error,
-      { route, method, ip, duration_ms }
-    );
+    logger.error("request.error", err as Error, { route, method, ip, duration_ms });
     metrics.increment("errors_total", 1, { route, method });
     throw err;
   }

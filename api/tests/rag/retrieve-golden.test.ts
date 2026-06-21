@@ -22,7 +22,7 @@ import { resolve } from "node:path";
 
 const ARTIFACT_PATH = resolve(
   process.cwd(),
-  "../references/markitdown-corpus/corpus-embeddings.bge-m3-v1.json.gz",
+  "../references/markitdown-corpus/corpus-embeddings.bge-m3-v1.json.gz"
 );
 
 // Pin cache dir explicitly so beforeAll is reproducible across machines.
@@ -55,51 +55,35 @@ async function topK(query: string, k = 4) {
 }
 
 describe("golden retrieval queries", () => {
-  it(
-    "Q1: 'Doña Rosa tendera tienda fiadera' → top doc mentions Dona Rosa",
-    async () => {
-      const results = await topK("Doña Rosa tendera tienda fiadera");
-      const top = results[0]!.doc;
-      // Top doc should reference Dona Rosa (either by name in title/id or by topic).
-      const text = `${top.id} ${top.text}`.toLowerCase();
-      expect(text).toMatch(/dona[-_ ]?rosa|rosa/);
-    },
-    30_000,
-  );
+  it("Q1: 'Doña Rosa tendera tienda fiadera' → top doc mentions Dona Rosa", async () => {
+    const results = await topK("Doña Rosa tendera tienda fiadera");
+    const top = results[0]!.doc;
+    // Top doc should reference Dona Rosa (either by name in title/id or by topic).
+    const text = `${top.id} ${top.text}`.toLowerCase();
+    expect(text).toMatch(/dona[-_ ]?rosa|rosa/);
+  }, 30_000);
 
-  it(
-    "Q2: 'Padre Cecilio parroco sacerdote' → top doc mentions Padre Cecilio",
-    async () => {
-      const results = await topK("Padre Cecilio parroco sacerdote");
-      const top = results[0]!.doc;
-      const text = `${top.id} ${top.text}`.toLowerCase();
-      expect(text).toMatch(/padre[-_ ]?cecilio|cecilio/);
-    },
-    30_000,
-  );
+  it("Q2: 'Padre Cecilio parroco sacerdote' → top doc mentions Padre Cecilio", async () => {
+    const results = await topK("Padre Cecilio parroco sacerdote");
+    const top = results[0]!.doc;
+    const text = `${top.id} ${top.text}`.toLowerCase();
+    expect(text).toMatch(/padre[-_ ]?cecilio|cecilio/);
+  }, 30_000);
 
-  it(
-    "Q3: 'iglesia templo parroquia' → top doc is about a church",
-    async () => {
-      const results = await topK("iglesia templo parroquia templo catolico");
-      const top = results[0]!.doc;
-      const text = `${top.id} ${top.text}`.toLowerCase();
-      // The corpus has 7 iglesia-san-antonio-tello photos and Padre Cecilio portrait.
-      // Either is a correct top-1.
-      const isChurch = /iglesia|parroquia|templo|church|cecilio/.test(text);
-      expect(isChurch).toBe(true);
-    },
-    30_000,
-  );
+  it("Q3: 'iglesia templo parroquia' → top doc is about a church", async () => {
+    const results = await topK("iglesia templo parroquia templo catolico");
+    const top = results[0]!.doc;
+    const text = `${top.id} ${top.text}`.toLowerCase();
+    // The corpus has 7 iglesia-san-antonio-tello photos and Padre Cecilio portrait.
+    // Either is a correct top-1.
+    const isChurch = /iglesia|parroquia|templo|church|cecilio/.test(text);
+    expect(isChurch).toBe(true);
+  }, 30_000);
 
-  it(
-    "Q4: 'retrato persona opita maria' → top doc is a maria-output portrait",
-    async () => {
-      const results = await topK("retrato persona opita maria generation");
-      const top = results[0]!.doc;
-      const text = `${top.id} ${top.text}`.toLowerCase();
-      expect(text).toMatch(/maria-output|persona|portrait/);
-    },
-    30_000,
-  );
+  it("Q4: 'retrato persona opita maria' → top doc is a maria-output portrait", async () => {
+    const results = await topK("retrato persona opita maria generation");
+    const top = results[0]!.doc;
+    const text = `${top.id} ${top.text}`.toLowerCase();
+    expect(text).toMatch(/maria-output|persona|portrait/);
+  }, 30_000);
 });

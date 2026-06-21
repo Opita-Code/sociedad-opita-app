@@ -7,7 +7,7 @@ import { resolve } from "node:path";
 
 const ARTIFACT_PATH = resolve(
   process.cwd(),
-  "../references/markitdown-corpus/corpus-embeddings.bge-m3-v1.json.gz",
+  "../references/markitdown-corpus/corpus-embeddings.bge-m3-v1.json.gz"
 );
 
 function sha256(buf: Buffer): string {

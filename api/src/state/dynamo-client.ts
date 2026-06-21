@@ -35,36 +35,35 @@ export function getTableName(): string {
 
 export async function putItem<T extends Record<string, unknown>>(
   item: T,
-  options?: { ttl?: number },
+  options?: { ttl?: number }
 ): Promise<void> {
   const tableName = getTableName();
-  const itemWithTtl =
-    options?.ttl !== undefined ? { ...item, expiresAt: options.ttl } : item;
+  const itemWithTtl = options?.ttl !== undefined ? { ...item, expiresAt: options.ttl } : item;
   await docClient.send(
     new PutCommand({
       TableName: tableName,
       Item: itemWithTtl,
-    }),
+    })
   );
 }
 
 export async function getItem<T = Record<string, unknown>>(
   pk: string,
-  sk: string,
+  sk: string
 ): Promise<T | null> {
   const tableName = getTableName();
   const result = await docClient.send(
     new GetCommand({
       TableName: tableName,
       Key: { pk, sk },
-    }),
+    })
   );
   return (result.Item as T | undefined) ?? null;
 }
 
 export async function queryByPersona<T = Record<string, unknown>>(
   personaId: string,
-  options?: { skPrefix?: string; limit?: number },
+  options?: { skPrefix?: string; limit?: number }
 ): Promise<T[]> {
   const tableName = getTableName();
 
@@ -83,7 +82,7 @@ export async function queryByPersona<T = Record<string, unknown>>(
       KeyConditionExpression: keyExpr,
       ExpressionAttributeValues: exprValues,
       Limit: options?.limit,
-    }),
+    })
   );
 
   return (result.Items as T[] | undefined) ?? [];
@@ -91,7 +90,7 @@ export async function queryByPersona<T = Record<string, unknown>>(
 
 export async function queryByPartition<T = Record<string, unknown>>(
   partitionKey: string,
-  options?: { skPrefix?: string; limit?: number; scanForward?: boolean },
+  options?: { skPrefix?: string; limit?: number; scanForward?: boolean }
 ): Promise<T[]> {
   const tableName = getTableName();
 
@@ -110,7 +109,7 @@ export async function queryByPartition<T = Record<string, unknown>>(
       ExpressionAttributeValues: exprValues,
       Limit: options?.limit,
       ScanIndexForward: options?.scanForward,
-    }),
+    })
   );
 
   return (result.Items as T[] | undefined) ?? [];
@@ -118,7 +117,7 @@ export async function queryByPartition<T = Record<string, unknown>>(
 
 export async function queryByTime<T = Record<string, unknown>>(
   tsBucket: string,
-  options?: { tsGte?: string; tsLte?: string; limit?: number },
+  options?: { tsGte?: string; tsLte?: string; limit?: number }
 ): Promise<T[]> {
   const tableName = getTableName();
 
@@ -142,7 +141,7 @@ export async function queryByTime<T = Record<string, unknown>>(
       ExpressionAttributeValues: exprValues,
       Limit: options?.limit,
       ScanIndexForward: false,
-    }),
+    })
   );
 
   return (result.Items as T[] | undefined) ?? [];
@@ -167,7 +166,7 @@ const RESERVED_KEYWORDS = new Set([
 export async function updateItem(
   pk: string,
   sk: string,
-  updates: Record<string, unknown>,
+  updates: Record<string, unknown>
 ): Promise<void> {
   const tableName = getTableName();
 
@@ -192,9 +191,8 @@ export async function updateItem(
       TableName: tableName,
       Key: { pk, sk },
       UpdateExpression: `SET ${setClauses.join(", ")}`,
-      ExpressionAttributeNames:
-        Object.keys(exprNames).length > 0 ? exprNames : undefined,
+      ExpressionAttributeNames: Object.keys(exprNames).length > 0 ? exprNames : undefined,
       ExpressionAttributeValues: exprValues,
-    }),
+    })
   );
 }

@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { cosine, topK, loadCorpusFromBuffer, loadCorpus, retrieve, type CorpusDoc } from "../../src/rag/retrieve";
+import {
+  cosine,
+  topK,
+  loadCorpusFromBuffer,
+  loadCorpus,
+  retrieve,
+  type CorpusDoc,
+} from "../../src/rag/retrieve";
 
 function makeDoc(id: string, embedding: number[]): CorpusDoc {
   return {
@@ -68,13 +75,7 @@ describe("topK()", () => {
   });
 
   it("returns top-k items when k < length", () => {
-    const items = [
-      { score: 0.1 },
-      { score: 0.8 },
-      { score: 0.4 },
-      { score: 0.6 },
-      { score: 0.2 },
-    ];
+    const items = [{ score: 0.1 }, { score: 0.8 }, { score: 0.4 }, { score: 0.6 }, { score: 0.2 }];
     const result = topK(items, 3);
     expect(result).toHaveLength(3);
     expect(result.map((r) => r.score)).toEqual([0.8, 0.6, 0.4]);
@@ -100,10 +101,7 @@ describe("topK()", () => {
 
 describe("loadCorpusFromBuffer()", () => {
   it("parses gzipped JSON array of CorpusDoc", async () => {
-    const docs: CorpusDoc[] = [
-      makeDoc("a", [1, 0, 0]),
-      makeDoc("b", [0, 1, 0]),
-    ];
+    const docs: CorpusDoc[] = [makeDoc("a", [1, 0, 0]), makeDoc("b", [0, 1, 0])];
     const json = JSON.stringify(docs);
     const { gzipSync } = await import("node:zlib");
     const gz = gzipSync(Buffer.from(json, "utf8"));
@@ -117,7 +115,9 @@ describe("loadCorpusFromBuffer()", () => {
   it("throws with file path context on malformed JSON", async () => {
     const { gzipSync } = await import("node:zlib");
     const gz = gzipSync(Buffer.from("not json", "utf8"));
-    await expect(loadCorpusFromBuffer(new Uint8Array(gz), "fake.json.gz")).rejects.toThrow(/fake\.json\.gz/);
+    await expect(loadCorpusFromBuffer(new Uint8Array(gz), "fake.json.gz")).rejects.toThrow(
+      /fake\.json\.gz/
+    );
   });
 });
 
@@ -130,7 +130,10 @@ describe("loadCorpus()", () => {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
     const os = await import("node:os");
-    const tmpPath = path.join(os.tmpdir(), `corpus-test-${Date.now()}-${Math.random().toString(36).slice(2)}.json.gz`);
+    const tmpPath = path.join(
+      os.tmpdir(),
+      `corpus-test-${Date.now()}-${Math.random().toString(36).slice(2)}.json.gz`
+    );
     await fs.writeFile(tmpPath, gz);
     try {
       const loaded = await loadCorpus(tmpPath);
@@ -149,11 +152,7 @@ describe("loadCorpus()", () => {
 describe("retrieve()", () => {
   it("returns top-k CorpusDocs scored by cosine similarity", () => {
     const q = new Float32Array([1, 0, 0]);
-    const corpus = [
-      makeDoc("a", [1, 0, 0]),
-      makeDoc("b", [0, 1, 0]),
-      makeDoc("c", [0.9, 0.1, 0]),
-    ];
+    const corpus = [makeDoc("a", [1, 0, 0]), makeDoc("b", [0, 1, 0]), makeDoc("c", [0.9, 0.1, 0])];
     const results = retrieve(q, corpus, 3);
     expect(results).toHaveLength(3);
     expect(results[0]!.doc.id).toBe("a");
@@ -164,7 +163,9 @@ describe("retrieve()", () => {
 
   it("respects default k=4", () => {
     const q = new Float32Array([1, 0, 0]);
-    const corpus = Array.from({ length: 10 }, (_, i) => makeDoc(`d${i}`, [Math.cos(i), Math.sin(i), 0]));
+    const corpus = Array.from({ length: 10 }, (_, i) =>
+      makeDoc(`d${i}`, [Math.cos(i), Math.sin(i), 0])
+    );
     const results = retrieve(q, corpus);
     expect(results).toHaveLength(4);
   });

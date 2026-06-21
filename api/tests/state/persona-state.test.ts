@@ -63,7 +63,7 @@ describe("getPersonaState()", () => {
     await getPersonaState("don_rosalio");
     expect(getItemMock).toHaveBeenCalledWith(
       KEYS.personaState("don_rosalio").pk,
-      KEYS.personaState("don_rosalio").sk,
+      KEYS.personaState("don_rosalio").sk
     );
   });
 
@@ -121,9 +121,7 @@ describe("setPersonaState()", () => {
       recentEvents: ["evt-99"],
       lastSeen: "2025-06-21T12:00:00Z",
     });
-    expect((written.networkPosition as { betweenness: number }).betweenness).toBe(
-      0.42,
-    );
+    expect((written.networkPosition as { betweenness: number }).betweenness).toBe(0.42);
   });
 
   it("merges partial updates into the current state", async () => {
@@ -154,9 +152,7 @@ describe("setPersonaState()", () => {
       lastSeen: "2025-06-21T12:00:00Z",
       networkPosition: { betweenness: 0, degree: 0 },
     });
-    const options = putItemMock.mock.calls[0]![1] as
-      | { ttl?: number }
-      | undefined;
+    const options = putItemMock.mock.calls[0]![1] as { ttl?: number } | undefined;
     expect(options?.ttl).toBeUndefined();
   });
 });

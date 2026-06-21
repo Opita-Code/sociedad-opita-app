@@ -107,9 +107,7 @@ beforeEach(async () => {
   // Default happy-path mocks
   loadCorpusMock.mockResolvedValue([VALID_DOC]);
   embedQueryMock.mockResolvedValue(new Float32Array([0.1, 0.2, 0.3]));
-  retrieveMock.mockReturnValue([
-    { doc: VALID_DOC, score: 0.91 },
-  ]);
+  retrieveMock.mockReturnValue([{ doc: VALID_DOC, score: 0.91 }]);
   getPersonaStateMock.mockResolvedValue({
     personaId: "dona_rosa_tendera",
     emotionalState: "neutral",
@@ -241,9 +239,7 @@ describe("POST /v1/dialogue — input validation", () => {
       errors: Array<{ field: string; message: string }>;
     };
     expect(body.error).toBe("validation_failed");
-    expect(body.errors.map((e) => e.field)).toEqual(
-      expect.arrayContaining(["persona_id"]),
-    );
+    expect(body.errors.map((e) => e.field)).toEqual(expect.arrayContaining(["persona_id"]));
   });
 
   it("returns 400 when query is missing", async () => {
@@ -340,11 +336,7 @@ describe("POST /v1/dialogue — RAG pipeline", () => {
     await res.text();
 
     expect(retrieveMock).toHaveBeenCalledTimes(1);
-    const [qEmb, corpus, k] = retrieveMock.mock.calls[0] as [
-      Float32Array,
-      CorpusDoc[],
-      number,
-    ];
+    const [qEmb, corpus, k] = retrieveMock.mock.calls[0] as [Float32Array, CorpusDoc[], number];
     expect(qEmb).toBeInstanceOf(Float32Array);
     expect(corpus).toEqual([VALID_DOC]);
     expect(k).toBe(4);

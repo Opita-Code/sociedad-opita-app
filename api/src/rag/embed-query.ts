@@ -28,7 +28,7 @@ import { pipeline, env } from "@huggingface/transformers";
 
 type FeatureExtractor = (
   text: string,
-  options: { pooling: "mean"; normalize: true },
+  options: { pooling: "mean"; normalize: true }
 ) => Promise<{ data: Float32Array }>;
 
 let extractorPromise: Promise<FeatureExtractor> | null = null;

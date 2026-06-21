@@ -41,7 +41,9 @@ interface Captured {
   emfs: EMFDoc[];
 }
 
-function captureAll<T>(fn: () => T | Promise<T>): Promise<{ result: T; logs: LogDoc[]; emfs: EMFDoc[] }> {
+function captureAll<T>(
+  fn: () => T | Promise<T>
+): Promise<{ result: T; logs: LogDoc[]; emfs: EMFDoc[] }> {
   return (async () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
     try {
@@ -167,7 +169,9 @@ describe("observability middleware — metrics", () => {
         body: JSON.stringify({ persona_id: "dona_rosa_tendera" }),
       })
     );
-    const inc = emfs.find((e) => e._aws?.CloudWatchMetrics?.Metrics?.[0]?.Name === "invocations_total");
+    const inc = emfs.find(
+      (e) => e._aws?.CloudWatchMetrics?.Metrics?.[0]?.Name === "invocations_total"
+    );
     expect(inc?.status).toBe("200");
     expect(inc?.method).toBe("POST");
   });

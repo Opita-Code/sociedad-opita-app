@@ -36,11 +36,7 @@ function personaById(id: string) {
   return p;
 }
 
-function makeResult(
-  id: string,
-  text: string,
-  score: number = 0.8,
-): RetrievalResult {
+function makeResult(id: string, text: string, score: number = 0.8): RetrievalResult {
   return {
     score,
     doc: {
@@ -65,7 +61,7 @@ describe("muletilla preservation — persona-bound (1..6)", () => {
       rosalio,
       { time: "06:30", place: "finca" },
       [makeResult("doc-1", "Contexto de la finca")],
-      "Don Rosalio, asina es la cosa, ¿cómo va la cosecha?",
+      "Don Rosalio, asina es la cosa, ¿cómo va la cosecha?"
     );
     // (a) query preserved in user prompt
     expect(ctx.user).toContain("asina es la cosa");
@@ -79,7 +75,7 @@ describe("muletilla preservation — persona-bound (1..6)", () => {
       rosalio,
       { time: "07:00", place: "tienda" },
       [],
-      "Le digo yo que este año llueve poco",
+      "Le digo yo que este año llueve poco"
     );
     expect(ctx.user).toContain("Le digo yo");
     expect(ctx.system).toContain("le digo yo");
@@ -92,7 +88,7 @@ describe("muletilla preservation — persona-bound (1..6)", () => {
       rosalio,
       { time: "08:00", place: "finca" },
       [],
-      "Ni muerto vendo esa tierra",
+      "Ni muerto vendo esa tierra"
     );
     expect(ctx.user.toLowerCase()).toContain("ni muerto");
     // System prompt has the canonical "Ni muerto" with capital N.
@@ -105,7 +101,7 @@ describe("muletilla preservation — persona-bound (1..6)", () => {
       prudencia,
       { time: "10:00", place: "casa" },
       [],
-      "Pues mijo, cuénteme de los difuntos",
+      "Pues mijo, cuénteme de los difuntos"
     );
     // Visitor query preserved verbatim.
     expect(ctx.user).toContain("Pues mijo");
@@ -119,7 +115,7 @@ describe("muletilla preservation — persona-bound (1..6)", () => {
       rosa,
       { time: "06:00", place: "tienda" },
       [],
-      "Doña Rosa, le cuento que vengo de Neiva",
+      "Doña Rosa, le cuento que vengo de Neiva"
     );
     expect(ctx.user).toContain("le cuento");
     expect(ctx.system).toContain("le cuento");
@@ -131,7 +127,7 @@ describe("muletilla preservation — persona-bound (1..6)", () => {
       cecilio,
       { time: "06:00", place: "iglesia" },
       [],
-      "Padre, mijo le pregunta por la procesión",
+      "Padre, mijo le pregunta por la procesión"
     );
     // "mijo" is in cecilio's muletillas (and naturally appears in
     // the query). It must reach the LLM in both system and user.
@@ -151,7 +147,7 @@ describe("muletilla preservation — generic opita phrases (7..10)", () => {
       rosalio,
       { time: "06:00", place: "finca" },
       [],
-      "Don Rosalio, ¿qué opina? Dios proveerá, ¿no?",
+      "Don Rosalio, ¿qué opina? Dios proveerá, ¿no?"
     );
     expect(ctx.user).toContain("Dios proveerá");
     // System prompt must NOT fabricate this phrase into the persona's
@@ -165,7 +161,7 @@ describe("muletilla preservation — generic opita phrases (7..10)", () => {
       rosa,
       { time: "15:00", place: "plaza" },
       [],
-      "Doña Rosa, qué pueblo tan bonito el de ustedes",
+      "Doña Rosa, qué pueblo tan bonito el de ustedes"
     );
     expect(ctx.user).toContain("qué pueblo tan bonito");
     // Generic praise is not part of Rosa's muletillas — must NOT be
@@ -179,7 +175,7 @@ describe("muletilla preservation — generic opita phrases (7..10)", () => {
       eliecer,
       { time: "12:00", place: "finca" },
       [],
-      "Mijo, no hay nada peor que un patrón que no paga",
+      "Mijo, no hay nada peor que un patrón que no paga"
     );
     expect(ctx.user).toContain("no hay nada peor que");
     // System prompt must NOT invent this phrase into persona muletillas.
@@ -192,7 +188,7 @@ describe("muletilla preservation — generic opita phrases (7..10)", () => {
       jhonFredy,
       { time: "18:00", place: "parque" },
       [],
-      "Ni modo, aquí toca aguantarse",
+      "Ni modo, aquí toca aguantarse"
     );
     expect(ctx.user).toContain("Ni modo");
     // Jhon Fredy's muletillas are "parce", "nojoda", "esa vaina" — the
@@ -204,12 +200,7 @@ describe("muletilla preservation — generic opita phrases (7..10)", () => {
 describe("muletilla preservation — defensive cases", () => {
   it("a query that is only a muletilla still produces a valid prompt", () => {
     const rosa = personaById("dona_rosa_tendera");
-    const ctx = buildContext(
-      rosa,
-      { time: "08:00", place: "tienda" },
-      [],
-      "le cuento",
-    );
+    const ctx = buildContext(rosa, { time: "08:00", place: "tienda" }, [], "le cuento");
     expect(ctx.user).toContain("le cuento");
     expect(ctx.user).toMatch(/¿Que haces o dices\?$/);
     expect(ctx.system.length).toBeGreaterThan(0);
@@ -221,7 +212,7 @@ describe("muletilla preservation — defensive cases", () => {
       cecilio,
       { time: "07:00", place: "iglesia" },
       [],
-      "mijo, ¿a qué hora abre?",
+      "mijo, ¿a qué hora abre?"
     );
     // "mijo" looks like it could be a role marker prefix, but the
     // sanitizer only strips "system:", "assistant:", "user:",
@@ -235,12 +226,7 @@ describe("muletilla preservation — defensive cases", () => {
     const rosalio = personaById("don_rosalio_ganadero");
     // Control chars are stripped by sanitize(), but the surrounding
     // text (including the muletilla) must still reach the LLM.
-    const ctx = buildContext(
-      rosalio,
-      { time: "06:00", place: "finca" },
-      [],
-      "asina\x00es la cosa",
-    );
+    const ctx = buildContext(rosalio, { time: "06:00", place: "finca" }, [], "asina\x00es la cosa");
     expect(ctx.user).toContain("asina");
     expect(ctx.user).toContain("es la cosa");
     // The null byte must be gone.
@@ -252,12 +238,7 @@ describe("muletilla preservation — defensive cases", () => {
     // Walk every persona and verify all 3 muletillas land in the system
     // prompt. This guards against future refactors that change the slice.
     for (const persona of TELLO_PERSONAS) {
-      const { system } = buildContext(
-        persona,
-        { time: "06:00", place: "pueblo" },
-        [],
-        "Hola",
-      );
+      const { system } = buildContext(persona, { time: "06:00", place: "pueblo" }, [], "Hola");
       const first3 = persona.muletillas.slice(0, 3);
       expect(first3.length).toBeGreaterThan(0);
       for (const m of first3) {
@@ -272,18 +253,8 @@ describe("muletilla preservation — defensive cases", () => {
   it("persona A's muletillas do NOT bleed into persona B's system prompt", () => {
     const rosa = personaById("dona_rosa_tendera");
     const rosalio = personaById("don_rosalio_ganadero");
-    const rosaCtx = buildContext(
-      rosa,
-      { time: "08:00", place: "tienda" },
-      [],
-      "Hola",
-    );
-    const rosalioCtx = buildContext(
-      rosalio,
-      { time: "06:30", place: "finca" },
-      [],
-      "Hola",
-    );
+    const rosaCtx = buildContext(rosa, { time: "08:00", place: "tienda" }, [], "Hola");
+    const rosalioCtx = buildContext(rosalio, { time: "06:30", place: "finca" }, [], "Hola");
     // Rosa's muletilla "mira ve" must NOT appear in Rosalio's prompt.
     expect(rosalioCtx.system).not.toContain("mira ve");
     // Rosalio's muletilla "asina es la cosa" must NOT appear in Rosa's.

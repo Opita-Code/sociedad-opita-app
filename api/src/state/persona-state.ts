@@ -29,9 +29,7 @@ export function defaultPersonaState(personaId: string): PersonaState {
   };
 }
 
-export async function getPersonaState(
-  personaId: string,
-): Promise<PersonaState> {
+export async function getPersonaState(personaId: string): Promise<PersonaState> {
   const { pk, sk } = KEYS.personaState(personaId);
   const stored = await getItem<Partial<PersonaState>>(pk, sk);
   if (!stored) return defaultPersonaState(personaId);
@@ -40,9 +38,7 @@ export async function getPersonaState(
   return {
     personaId: stored.personaId ?? defaults.personaId,
     emotionalState: stored.emotionalState ?? defaults.emotionalState,
-    recentEvents: Array.isArray(stored.recentEvents)
-      ? stored.recentEvents
-      : defaults.recentEvents,
+    recentEvents: Array.isArray(stored.recentEvents) ? stored.recentEvents : defaults.recentEvents,
     lastSeen: stored.lastSeen ?? defaults.lastSeen,
     networkPosition: stored.networkPosition ?? defaults.networkPosition,
   };
@@ -50,7 +46,7 @@ export async function getPersonaState(
 
 export async function setPersonaState(
   personaId: string,
-  partial: Partial<PersonaState>,
+  partial: Partial<PersonaState>
 ): Promise<void> {
   const { pk, sk } = KEYS.personaState(personaId);
   const current = await getPersonaState(personaId);
@@ -65,9 +61,7 @@ export async function setPersonaState(
   if (Array.isArray(partial.recentEvents)) {
     const evs = partial.recentEvents;
     merged.recentEvents =
-      evs.length > RECENT_EVENTS_MAX
-        ? evs.slice(evs.length - RECENT_EVENTS_MAX)
-        : evs;
+      evs.length > RECENT_EVENTS_MAX ? evs.slice(evs.length - RECENT_EVENTS_MAX) : evs;
   } else if (!merged.recentEvents) {
     merged.recentEvents = [];
   }

@@ -80,16 +80,34 @@ beforeEach(async () => {
   appendTurnMock.mockReset();
 
   loadCorpusMock.mockResolvedValue([
-    doc("dona-rosa-portrait", "Doña Rosa Elvira, tendera fiadera del pueblo.", "personas/dona-rosa", ["dona_rosa_tendera"]),
-    doc("don-rosalio-portrait", "Don Rosalio, ganadero propietario del pueblo.", "personas/don-rosalio", ["don_rosalio_ganadero"]),
-    doc("padre-cecilio-portrait", "Padre Cecilio, parroco del pueblo.", "personas/padre-cecilio", ["padre_cecilio_sacerdote"]),
-    doc("iglesia-san-antonio", "Iglesia San Antonio de Tello.", "iglesia", ["padre_cecilio_sacerdote"]),
-    doc("masacre-puente", "Masacre del Puente de los Decapitados, 1950.", "historia/masacre-1950", []),
+    doc(
+      "dona-rosa-portrait",
+      "Doña Rosa Elvira, tendera fiadera del pueblo.",
+      "personas/dona-rosa",
+      ["dona_rosa_tendera"]
+    ),
+    doc(
+      "don-rosalio-portrait",
+      "Don Rosalio, ganadero propietario del pueblo.",
+      "personas/don-rosalio",
+      ["don_rosalio_ganadero"]
+    ),
+    doc("padre-cecilio-portrait", "Padre Cecilio, parroco del pueblo.", "personas/padre-cecilio", [
+      "padre_cecilio_sacerdote",
+    ]),
+    doc("iglesia-san-antonio", "Iglesia San Antonio de Tello.", "iglesia", [
+      "padre_cecilio_sacerdote",
+    ]),
+    doc(
+      "masacre-puente",
+      "Masacre del Puente de los Decapitados, 1950.",
+      "historia/masacre-1950",
+      []
+    ),
   ]);
   embedQueryMock.mockResolvedValue(new Float32Array([0.5, 0.5, 0.5]));
-  retrieveMock.mockImplementation(
-    (_q: Float32Array, corpus: CorpusDoc[], k: number) =>
-      corpus.slice(0, k).map((d, i) => ({ doc: d, score: 0.9 - i * 0.05 })),
+  retrieveMock.mockImplementation((_q: Float32Array, corpus: CorpusDoc[], k: number) =>
+    corpus.slice(0, k).map((d, i) => ({ doc: d, score: 0.9 - i * 0.05 }))
   );
   getPersonaStateMock.mockResolvedValue({
     personaId: "dona_rosa_tendera",
@@ -142,9 +160,7 @@ describe("golden query 1 — Don Rosalío ganadero binding", () => {
     expect(call.user).toContain("¿Cómo cuida la tierra?");
 
     const chunks = await sseChunks(res);
-    const personaTurn = chunks.find((c) => c.text !== undefined) as
-      | { text: string }
-      | undefined;
+    const personaTurn = chunks.find((c) => c.text !== undefined) as { text: string } | undefined;
     expect(personaTurn).toBeDefined();
     expect(personaTurn!.text).toContain("tierra");
   });
@@ -188,13 +204,35 @@ describe("golden query 2 — Doña Rosa chismes (betweenness centrality)", () =>
 describe("golden query 3 — Masacre del Puente (off-persona retrieval)", () => {
   it("still produces a valid response when query is about pueblo history", async () => {
     // For this query, simulate the Masacre doc surfacing as top-1.
-    retrieveMock.mockImplementationOnce(
-      (_q: Float32Array, _corpus: CorpusDoc[], k: number) => [
-        { doc: doc("masacre-puente", "Masacre del Puente de los Decapitados, 1950.", "historia/masacre-1950", []), score: 0.95 },
-        { doc: doc("dona-prudencia-portrait", "Doña Prudencia, viuda anfitriona.", "personas/dona-prudencia", ["dona_prudencia_viuda"]), score: 0.7 },
-        { doc: doc("historia-pueblo", "Historia del pueblo de Tello.", "historia/general", []), score: 0.6 },
-        { doc: doc("costumbres", "Costumbres funerarias del Huila.", "cultura/funerario", []), score: 0.5 },
-      ].slice(0, k),
+    retrieveMock.mockImplementationOnce((_q: Float32Array, _corpus: CorpusDoc[], k: number) =>
+      [
+        {
+          doc: doc(
+            "masacre-puente",
+            "Masacre del Puente de los Decapitados, 1950.",
+            "historia/masacre-1950",
+            []
+          ),
+          score: 0.95,
+        },
+        {
+          doc: doc(
+            "dona-prudencia-portrait",
+            "Doña Prudencia, viuda anfitriona.",
+            "personas/dona-prudencia",
+            ["dona_prudencia_viuda"]
+          ),
+          score: 0.7,
+        },
+        {
+          doc: doc("historia-pueblo", "Historia del pueblo de Tello.", "historia/general", []),
+          score: 0.6,
+        },
+        {
+          doc: doc("costumbres", "Costumbres funerarias del Huila.", "cultura/funerario", []),
+          score: 0.5,
+        },
+      ].slice(0, k)
     );
 
     ocaisStreamMock.mockImplementationOnce(async function* () {

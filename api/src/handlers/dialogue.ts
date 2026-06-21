@@ -90,8 +90,7 @@ const app = new Hono();
 type Corpus = Awaited<ReturnType<typeof loadCorpus>>;
 let corpusCache: Corpus | null = null;
 
-const DEFAULT_CORPUS_PATH =
-  "references/markitdown-corpus/corpus-embeddings.bge-m3-v1.json.gz";
+const DEFAULT_CORPUS_PATH = "references/markitdown-corpus/corpus-embeddings.bge-m3-v1.json.gz";
 
 /**
  * Lazy-load + memoize the corpus in module scope. One disk read per
@@ -115,10 +114,11 @@ app.post("/v1/dialogue", async (c: Context) => {
     return c.json(
       {
         error: "rate_limited",
-        message: "Has superado el limite de 10 dialogos por minuto. Vuelve a intentarlo en unos segundos.",
+        message:
+          "Has superado el limite de 10 dialogos por minuto. Vuelve a intentarlo en unos segundos.",
         retry_after_s: 6,
       },
-      429,
+      429
     );
   }
 
@@ -133,10 +133,7 @@ app.post("/v1/dialogue", async (c: Context) => {
   // 1b. Centralized validation (Polish R5).
   const validation = validateDialogueRequest(body);
   if (!validation.ok) {
-    return c.json(
-      { error: "validation_failed", errors: validation.errors },
-      400,
-    );
+    return c.json({ error: "validation_failed", errors: validation.errors }, 400);
   }
   const { persona_id, scene, query, conv_id } = validation.data;
 
@@ -206,7 +203,7 @@ app.post("/v1/dialogue", async (c: Context) => {
             if (chunk.type === "text") {
               fullText += chunk.text;
               controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ text: chunk.text })}\n\n`),
+                encoder.encode(`data: ${JSON.stringify({ text: chunk.text })}\n\n`)
               );
             } else if (chunk.type === "done") {
               controller.enqueue(
@@ -214,8 +211,8 @@ app.post("/v1/dialogue", async (c: Context) => {
                   `data: ${JSON.stringify({
                     cost: estimateCost(fullText, "deepseek-chat"),
                     latency: 0,
-                  })}\n\n`,
-                ),
+                  })}\n\n`
+                )
               );
 
               // Polish R9 (HIGH #2): record the cost via the observability
@@ -262,9 +259,7 @@ app.post("/v1/dialogue", async (c: Context) => {
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ error: "stream_error", message })}\n\n`,
-            ),
+            encoder.encode(`data: ${JSON.stringify({ error: "stream_error", message })}\n\n`)
           );
         } finally {
           // Close on every exit path: success (done chunk), unknown

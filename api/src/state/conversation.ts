@@ -38,19 +38,17 @@ export async function appendTurn(turn: AppendTurnInput): Promise<void> {
       content: turn.content,
       metadata: turn.metadata,
     },
-    { ttl },
+    { ttl }
   );
 }
 
-export async function getConversation(
-  convId: string,
-): Promise<ConversationTurn[]> {
+export async function getConversation(convId: string): Promise<ConversationTurn[]> {
   const { pk: partitionKey } = KEYS.conversationMessage(convId, "");
 
-  const items = await queryByPartition<Record<string, unknown>>(
-    partitionKey,
-    { skPrefix: "MSG#", scanForward: true },
-  );
+  const items = await queryByPartition<Record<string, unknown>>(partitionKey, {
+    skPrefix: "MSG#",
+    scanForward: true,
+  });
 
   return items.map((raw): ConversationTurn => {
     return {
