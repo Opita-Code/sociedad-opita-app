@@ -1,21 +1,34 @@
 /**
- * CORS hardening — Polish R5 (security).
+ * CORS hardening — Phase 2 (2026-06-21).
  *
- * Behaviors under test:
- *  - OPTIONS preflight returns 204 (no content) with all CORS headers set
- *  - Access-Control-Allow-Origin is the production origin (no wildcard)
- *  - Access-Control-Allow-Methods includes GET, POST, OPTIONS
- *  - Access-Control-Allow-Headers includes Content-Type
- *  - Access-Control-Allow-Credentials is "false" (no cookies)
- *  - Access-Control-Max-Age is "600" (preflight cache 10 min)
- *  - The same headers appear on a normal GET /health response
- *  - The same headers appear on a normal POST /v1/dialogue response
+ * History:
+ * - Polish R5 set CORS in the Hono middleware (api/src/api.ts) with
+ *   Access-Control-Allow-Origin: https://sociedad.opitacode.com.
+ *   That worked in dev but in production the AWS Lambda Function URL
+ *   adds its own Access-Control-Allow-Origin: * (default CORS) and
+ *   the two values end up in the response, which the browser rejects
+ *   with "header contains multiple values" — every cross-origin
+ *   fetch from sociedad.opitacode.com fails.
  *
- * The CORS middleware lives in api/src/api.ts (production). This file
- * imports the real `honoApp` export to assert on the live middleware
- * stack. The OCAIS / RAG / state mocks from api.test.ts are hoisted
- * globally by vitest, so this test can drive the real app without
- * hitting any external service.
+ * - The fix is to put the CORS configuration on the Function URL
+ *   (sst.config.ts → apiFn.url.cors) with allowOrigins pinned to the
+ *   production domain, and remove the Hono middleware. The browser
+ *   now sees exactly one Access-Control-Allow-Origin header.
+ *
+ * What this test asserts (Hono-side):
+ *  - The Hono app no longer sets Access-Control-Allow-Origin itself;
+ *    CORS is the Function URL's job. If this assertion ever fails,
+ *    someone re-introduced a second CORS source.
+ *  - OPTIONS preflights fall through to a 404 (Hono has no OPTIONS
+ *    route); the Function URL intercepts OPTIONS preflights and
+ *    responds 200 with the CORS headers before Hono sees them.
+ *  - The Hono middleware stack is CORS-free on real responses.
+ *
+ * The full CORS contract is verified end-to-end in the live smoke
+ * test (see `runbooks/verify-cors.md`): `curl -I` against
+ * https://api.sociedad.opitacode.com/v1/dialogue with
+ * `-H "Origin: https://sociedad.opitacode.com"` must show exactly
+ * one `access-control-allow-origin` header.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -68,57 +81,40 @@ beforeEach(() => {
   });
 });
 
-const ALLOWED_ORIGIN = "https://sociedad.opitacode.com";
-
-describe("CORS hardening — preflight (OPTIONS)", () => {
-  it("returns 204 No Content for OPTIONS /v1/dialogue", async () => {
-    const res = await honoApp.request("/v1/dialogue", { method: "OPTIONS" });
-    expect(res.status).toBe(204);
+describe("CORS — Hono is CORS-agnostic (Function URL owns the header)", () => {
+  it("does NOT set Access-Control-Allow-Origin in the Hono middleware (avoids duplicate headers)", async () => {
+    const res = await honoApp.request("/health");
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
   });
 
-  it("sets Access-Control-Allow-Origin to the production origin (no wildcard)", async () => {
-    const res = await honoApp.request("/v1/dialogue", { method: "OPTIONS" });
-    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(ALLOWED_ORIGIN);
+  it("does NOT set Access-Control-Allow-Methods in the Hono middleware", async () => {
+    const res = await honoApp.request("/health");
+    expect(res.headers.get("Access-Control-Allow-Methods")).toBeNull();
   });
 
-  it("sets Access-Control-Allow-Methods to GET, POST, OPTIONS", async () => {
-    const res = await honoApp.request("/v1/dialogue", { method: "OPTIONS" });
-    const methods = res.headers.get("Access-Control-Allow-Methods") || "";
-    expect(methods).toContain("GET");
-    expect(methods).toContain("POST");
-    expect(methods).toContain("OPTIONS");
+  it("does NOT set Access-Control-Allow-Headers in the Hono middleware", async () => {
+    const res = await honoApp.request("/health");
+    expect(res.headers.get("Access-Control-Allow-Headers")).toBeNull();
   });
 
-  it("sets Access-Control-Allow-Headers to include Content-Type", async () => {
-    const res = await honoApp.request("/v1/dialogue", { method: "OPTIONS" });
-    expect(res.headers.get("Access-Control-Allow-Headers")).toContain("Content-Type");
+  it("does NOT set Access-Control-Allow-Credentials in the Hono middleware", async () => {
+    const res = await honoApp.request("/health");
+    expect(res.headers.get("Access-Control-Allow-Credentials")).toBeNull();
   });
 
-  it("sets Access-Control-Allow-Credentials to 'false' (no cookies)", async () => {
-    const res = await honoApp.request("/v1/dialogue", { method: "OPTIONS" });
-    expect(res.headers.get("Access-Control-Allow-Credentials")).toBe("false");
+  it("does NOT set Access-Control-Max-Age in the Hono middleware", async () => {
+    const res = await honoApp.request("/health");
+    expect(res.headers.get("Access-Control-Max-Age")).toBeNull();
   });
 
-  it("sets Access-Control-Max-Age to '600' (10 min preflight cache)", async () => {
-    const res = await honoApp.request("/v1/dialogue", { method: "OPTIONS" });
-    expect(res.headers.get("Access-Control-Max-Age")).toBe("600");
-  });
-
-  it("preflight response has empty body (204 No Content)", async () => {
-    const res = await honoApp.request("/v1/dialogue", { method: "OPTIONS" });
-    const text = await res.text();
-    expect(text).toBe("");
-  });
-});
-
-describe("CORS hardening — actual responses", () => {
-  it("GET /health includes the production CORS headers", async () => {
+  it("GET /health still works without CORS (200 OK, JSON body)", async () => {
     const res = await honoApp.request("/health");
     expect(res.status).toBe(200);
-    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(ALLOWED_ORIGIN);
+    const body = await res.json();
+    expect(body.status).toBe("ok");
   });
 
-  it("POST /v1/dialogue (200) includes the production CORS headers", async () => {
+  it("POST /v1/dialogue still works without CORS in Hono", async () => {
     const res = await honoApp.request("/v1/dialogue", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -129,16 +125,16 @@ describe("CORS hardening — actual responses", () => {
       }),
     });
     expect(res.status).toBe(200);
-    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(ALLOWED_ORIGIN);
   });
 
-  it("POST /v1/dialogue (400) includes the production CORS headers (so the browser can read the error)", async () => {
-    const res = await honoApp.request("/v1/dialogue", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: "{not json",
-    });
-    expect(res.status).toBe(400);
-    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(ALLOWED_ORIGIN);
+  it("OPTIONS /v1/dialogue falls through Hono (Function URL intercepts preflight)", async () => {
+    // Without the Hono middleware catching OPTIONS, Hono returns 404
+    // for unknown methods/paths. In production the Function URL
+    // handles OPTIONS preflight before the request reaches Hono.
+    const res = await honoApp.request("/v1/dialogue", { method: "OPTIONS" });
+    // Hono returns 404 for OPTIONS on a route that doesn't have an
+    // OPTIONS handler. This is by design: CORS preflights are
+    // answered at the infra layer, not in the app.
+    expect([404, 405]).toContain(res.status);
   });
 });
