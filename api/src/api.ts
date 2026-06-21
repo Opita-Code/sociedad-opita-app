@@ -25,10 +25,19 @@ import personasApp from "./handlers/personas";
 const app = new Hono();
 
 // CORS para el frontend en sociedad.opitacode.com
+// Polish R5 (security hardening):
+//   - Allow-Credentials: false — the API is anonymous; no cookies, no
+//     Authorization header is read. Removing credentialed CORS closes off
+//     a CSRF-via-credentials surface that some browsers expose.
+//   - Max-Age: 600 — preflight responses can be cached for 10 minutes,
+//     shaving one round-trip per dialogue request without risking
+//     stale-policy windows beyond a deploy.
 app.use("*", async (c, next) => {
   c.header("Access-Control-Allow-Origin", "https://sociedad.opitacode.com");
   c.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   c.header("Access-Control-Allow-Headers", "Content-Type");
+  c.header("Access-Control-Allow-Credentials", "false");
+  c.header("Access-Control-Max-Age", "600");
   if (c.req.method === "OPTIONS") return c.body(null, 204);
   await next();
 });
