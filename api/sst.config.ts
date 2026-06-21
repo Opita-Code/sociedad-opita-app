@@ -65,6 +65,11 @@ export default $config({
     });
 
     // ─── API Handler (Hono on Lambda) ───────────────────────────
+    //   PR #9: bumped memory to 2048 MB to fit Xenova/bge-m3 (q8 ONNX,
+    //   ~600MB model + activations) for server-side query embedding.
+    //   PR #9: bumped timeout to 60s to absorb the 5-8s cold-start tax
+    //   when the model has to load on a fresh Lambda container.
+    //   PR #9: added CORPUS_PATH env var (S3-baked artifact in Phase 2).
     const apiFn = new sst.aws.Function("ApiFn", {
       url: true,
       handler: "src/api.handler",
@@ -73,9 +78,13 @@ export default $config({
         DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || "",
         DEEPSEEK_BASE_URL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1",
         DDB_TABLE: stateTable.name,
+        CORPUS_PATH:
+          process.env.CORPUS_PATH ||
+          "/tmp/corpus-embeddings.bge-m3-v1.json.gz",
         STAGE: $app.stage,
       },
-      memory: "512 MB",
+      memory: "2048 MB",
+      timeout: "60 seconds",
     });
 
     // ─── Router (api.sociedad.opitacode.com) ───────────────────
