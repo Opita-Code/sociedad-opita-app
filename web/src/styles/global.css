@@ -13,6 +13,16 @@
 
   --font-serif: Georgia, "Times New Roman", serif;
   --font-sans: system-ui, -apple-system, sans-serif;
+
+  /* Responsive breakpoints — used as references for future responsive
+     additions. Tailwind 4 ships with sm=40rem, md=48rem, lg=64rem,
+     xl=80rem by default. We document them here so the intent is
+     visible in the theme. */
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
 }
 
 html {
@@ -23,4 +33,35 @@ html {
 
 body {
   min-height: 100vh;
+}
+
+/* Prevent accidental horizontal overflow on narrow viewports.
+   The mobile-first pages already avoid fixed-width layouts, but
+   embedded media (images, figures) can still bleed — this guards
+   against regressions. */
+html,
+body {
+  overflow-x: hidden;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Image rendering hint: tell the browser that pictures smaller than
+   their layout box should be rendered crisply rather than blurred. */
+img {
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Re-enable scroll-behavior globally (the prefers-reduced-motion
+   override in Layout.astro flips this off for users who request it). */
+html {
+  scroll-behavior: smooth;
 }

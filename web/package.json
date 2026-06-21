@@ -13,6 +13,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check && tsc --noEmit",
+    "check:perf": "npx tsx scripts/check-perf-budget.ts",
+    "check:bundle": "npx tsx scripts/analyze-bundle.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

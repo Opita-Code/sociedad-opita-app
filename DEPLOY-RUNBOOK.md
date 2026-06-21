@@ -60,9 +60,16 @@
 - [ ] `npm run check` clean (`astro check` + `tsc --noEmit`).
 - [ ] All 5 routes built: `/`, `/replica`, `/taller`, `/ventana`, `/puente`
       (plus `/pronto` 404 stub). Each < 50 KB.
+- [ ] Shared CSS < 30 KB (Tailwind 4 base + `@theme` + R8 a11y: skip-to-content,
+      reduced-motion, print styles, focus-visible ring).
+- [ ] Total dist < 3 MB (R3 used 2.5 MB; R8 relaxes to 3 MB to absorb the
+      sitemap and any future additions).
+- [ ] `npm run check:perf` exits 0 (hard-fail on budget violation; see
+      `web/scripts/check-perf-budget.ts`).
 - [ ] No new visual slop (visual honesty principle — see archive
       `monumento-cultural-v2.md`).
 - [ ] WhatsApp bridge link present: `wa.me/573126126085`.
+- [ ] Sitemap.xml + robots.txt present in dist (Polish R8 SEO).
 - [ ] S3 + CloudFront OAI configured; bucket is **not** public.
 
 ### Observability
@@ -112,7 +119,7 @@ curl -sS -o /dev/null -w "%{http_code}\n" https://sociedad.opitacode.com/
 
 **Bundle analysis** — Polish R3 adds `web/scripts/analyze-bundle.ts`
 which reports per-page HTML size and total dist weight. Run it after
-each build to verify the `<50 KB` page budget and `<2.5 MB` total
+each build to verify the `<50 KB` page budget and `<3 MB` total
 budget hold:
 
 ```bash
@@ -121,22 +128,35 @@ npx tsx web/scripts/analyze-bundle.ts
 npx tsx scripts/analyze-bundle.ts
 ```
 
-Current snapshot (Polish R3, post-R5 merge):
+Polish R8 adds `web/scripts/check-perf-budget.ts` — a HARD-FAIL
+companion that exits 1 on any budget violation. Wire it into CI
+(`pnpm check:perf`) once the bundle exceeds soft budgets; until
+then `analyze-bundle.ts` is the operator's inspector:
 
-| Route       | HTML      | Total page weight (HTML + shared CSS/JS) |
-|-------------|-----------|------------------------------------------|
-| `/`         | 14.0 KB   | 224.4 KB                                 |
-| `/pronto`   | 1.8 KB    | 212.2 KB                                 |
-| `/puente`   | 10.2 KB   | 220.5 KB                                 |
-| `/replica`  | 11.7 KB   | 222.0 KB                                 |
-| `/taller`   | 39.6 KB   | 249.9 KB                                 |
-| `/ventana`  | 13.3 KB   | 223.7 KB                                 |
+```bash
+pnpm check:perf
+# Expected: "✅ All performance budgets met."
+```
 
-Total dist (all assets, including images + portraits + tiles): **~2.1 MB**
-across 46 files — well under the 2.5 MB total budget. The dominant
+Current snapshot (Polish R8):
+
+| Route       | HTML      | Shared CSS | Total page weight (HTML + shared CSS/JS) |
+|-------------|-----------|------------|------------------------------------------|
+| `/`         | 14.2 KB   | 23.4 KB    | 226.8 KB                                 |
+| `/pronto`   | 2.0 KB    | 23.4 KB    | 214.6 KB                                 |
+| `/puente`   | 10.4 KB   | 23.4 KB    | 222.9 KB                                 |
+| `/replica`  | 11.9 KB   | 23.4 KB    | 224.4 KB                                 |
+| `/taller`   | 39.8 KB   | 23.4 KB    | 252.3 KB                                 |
+| `/ventana`  | 13.5 KB   | 23.4 KB    | 226.0 KB                                 |
+
+Total dist (all assets, including images + portraits + tiles + sitemap.xml):
+**~2.1 MB** across 47 files — well under the 3 MB total budget. The dominant
 transfer cost is the shared `_astro/client.*.js` (~189 KB React +
 ReactDOM hydration bundle). If it grows past 200 KB, split the React
-islands per route.
+islands per route. Shared CSS sits at ~23 KB; budget holds at 30 KB to
+give the R8 a11y additions (skip-to-content, reduced-motion, print styles,
+focus-visible ring) headroom and room for future small additions without
+re-tuning.
 
 ### 2. Backend (Lambda via SST)
 

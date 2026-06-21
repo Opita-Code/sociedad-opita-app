@@ -35,6 +35,103 @@ const {
     <title>{title}</title>
   </head>
   <body class="min-h-screen bg-opita-arena text-opita-cafe">
-    <slot />
+    <a href="#main-content" class="skip-to-content">Saltar al contenido principal</a>
+    {/*
+      The slot is wrapped in a generic block element instead of <main> so
+      that the page-level <main> in each route (which is frozen under
+      Polish R8) does not become nested. role="main" + aria-label keep
+      AT semantic equivalence for the skip target. tabindex="-1" makes
+      the element programmatically focusable so the skip link can move
+      keyboard focus past the header.
+    */}
+    <div id="main-content" role="main" aria-label="Contenido principal" tabindex="-1">
+      <slot />
+    </div>
   </body>
 </html>
+
+<style is:global>
+  /* Skip-to-content link — visually hidden until focused (keyboard nav). */
+  .skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--color-opita-tierra);
+    color: var(--color-opita-arena);
+    padding: 8px 16px;
+    z-index: 100;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    text-decoration: underline;
+    border: 2px solid var(--color-opita-arena);
+    border-radius: 0 0 4px 0;
+    transition: top 0.15s ease-out;
+  }
+  .skip-to-content:focus {
+    top: 0;
+    outline: 3px solid var(--color-opita-plaza);
+    outline-offset: 2px;
+  }
+
+  /* Honor the user's motion preferences — turn animations and smooth-scroll off. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    html {
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Print styles — paper-friendly version of the monument. */
+  @media print {
+    nav,
+    button,
+    form,
+    [aria-label="Tabla de contenidos"],
+    .no-print {
+      display: none !important;
+    }
+    body {
+      color: #000;
+      background: #fff;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+    a {
+      color: #000;
+      text-decoration: underline;
+    }
+    a[href^="http"]::after {
+      content: " (" attr(href) ")";
+      font-size: 0.85em;
+      color: #555;
+    }
+    h1,
+    h2,
+    h3 {
+      page-break-after: avoid;
+    }
+    figure,
+    blockquote {
+      page-break-inside: avoid;
+    }
+  }
+
+  /* Visible focus ring for keyboard navigation — WCAG 2.1 SC 2.4.7. */
+  :focus-visible {
+    outline: 3px solid var(--color-opita-tierra);
+    outline-offset: 2px;
+  }
+
+  /* Remove the focus outline artifact when the skip target is focused
+     via the skip link (it is invisible-but-focusable, so users should
+     not see an outline ring on the invisible wrapper). */
+  #main-content:focus {
+    outline: none;
+  }
+</style>
