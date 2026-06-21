@@ -29,7 +29,10 @@ const dimensiones = [
     subtitulo: 'Mira el pueblo correr',
     descripcion: 'El reloj virtual de Tello avanza. Doña Rosa abre la tienda a las 6. Don Rosalío revisa el ganado. El cura entra a la iglesia. Los chismes se propagan por la plaza. Tú observas desde afuera, como en una plaza real.',
     color: 'tierra',
-    icono: 'ventana',
+    icono: 'V',
+    imagen: '/tile-ventana.jpg',
+    imagen_alt: 'Biblioteca departamental Olegario Rivera, Neiva — referencia arquitectónica civil del Huila',
+    imagen_credito: 'Foto: Wikimedia Commons (CC-BY-SA-4.0)',
   },
   {
     href: '/puente',
@@ -37,7 +40,10 @@ const dimensiones = [
     subtitulo: 'Háblale a sus personajes',
     descripcion: 'Don Cecilio te habla de Dios y del pueblo. Doña Rosa te fía una panela. Jhon Fredy te cuenta por qué se fue a Bogotá y por qué volvió. Les preguntas lo que quieras. Ellos te responden en opita, con sus muletillas, con sus modos.',
     color: 'magdalena',
-    icono: 'puente',
+    icono: 'P',
+    imagen: '/tile-puente.jpg',
+    imagen_alt: 'Río Magdalena a la altura de Huila — el río que conecta el pueblo',
+    imagen_credito: 'Foto: Río Magdalena, Colombia 04 / Wikimedia Commons (CC-BY-SA-4.0)',
   },
   {
     href: '/replica',
@@ -45,7 +51,10 @@ const dimensiones = [
     subtitulo: 'Extiende el monumento a tu municipio',
     descripcion: 'Si tu pueblo también merece ser preservado, replica el simulador. Universidad de Garzón, alcaldía de Pitalito, personería de La Plata. El método es abierto, la data es tuya, el código es tuyo.',
     color: 'plaza',
-    icono: 'replica',
+    icono: 'R',
+    imagen: '/tile-replica.jpg',
+    imagen_alt: 'Paisaje del departamento del Huila — símbolo de replicabilidad',
+    imagen_credito: 'Foto: Landscape of Huila Departement / Wikimedia Commons (CC-BY-SA-4.0)',
   },
   {
     href: '/taller',
@@ -53,14 +62,34 @@ const dimensiones = [
     subtitulo: 'El detrás de escena académico',
     descripcion: 'El paper, los 10 diálogos validados por hablante nativo, los 41 perfiles psicométricos, la metodología forense, la memoria de la Masacre del Puente de los Decapitados (1950). Para investigadores, periodistas, sociólogos.',
     color: 'cafe',
-    icono: 'taller',
+    icono: 'T',
+    imagen: '/tile-taller.jpg',
+    imagen_alt: 'Horno típico huilense — taller tradicional de cocina artesanal',
+    imagen_credito: 'Foto: Horno típico del Huila / Wikimedia Commons (CC-BY-SA-4.0)',
   },
 ];
 ---
 
 <Layout title="Sociedad Opita — el primer monumento digital vivo de Tello, Huila">
   <main class="max-w-5xl mx-auto px-6 py-16 md:py-24">
-    <!-- Hero -->
+    <!-- Hero photographic banner: real Andean landscape (Wikimedia Commons, CC-BY-SA-4.0) -->
+    <figure class="mb-10 -mx-6 md:mx-0">
+      <img
+        src="/hero-tello-landscape.jpg"
+        alt="Paisaje andino del Huila, similar al de Tello — valles del Magdalena, cordillera y caserío disperso"
+        width="1920"
+        height="584"
+        class="w-full h-auto rounded-lg shadow-md"
+        loading="eager"
+        fetchpriority="high"
+      />
+      <figcaption class="text-xs text-opita-tierra mt-3 italic text-center px-4 md:px-0">
+        Foto: <em>Landscape near Gigante, Colombia 01</em> por Bernard Gagnon · Wikimedia Commons · CC-BY-SA-4.0.
+        Valle andino del Magdalena, mismo terreno que Tello (no es foto de Tello — Tello aún no tiene archivo fotográfico público abierto; ver <a href="/VISUAL-HONESTY.md" class="underline hover:text-opita-verriondo">honestidad visual</a>).
+      </figcaption>
+    </figure>
+
+    <!-- Hero text -->
     <header class="text-center mb-20">
       <p class="text-sm uppercase tracking-widest text-opita-tierra mb-4">
         Tello, Huila · Colombia
@@ -112,27 +141,42 @@ const dimensiones = [
         {dimensiones.map((dim) => (
           <a
             href={dim.href}
-            class={`block bg-white border-2 border-opita-${dim.color} rounded-lg p-8 hover:shadow-xl transition-shadow duration-300 group`}
+            class={`block bg-white border-2 border-opita-${dim.color} rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group`}
           >
-            <div class="flex items-start gap-4 mb-4">
-              <div class={`flex-shrink-0 w-12 h-12 rounded-full bg-opita-${dim.color} text-white flex items-center justify-center font-serif text-xl`}>
-                {dim.titulo.charAt(3)}
+            <figure class="aspect-[3/2] overflow-hidden bg-opita-hueso/30">
+              <img
+                src={dim.imagen}
+                alt={dim.imagen_alt}
+                width="900"
+                height="600"
+                loading="lazy"
+                class="w-full h-full object-cover"
+              />
+            </figure>
+            <div class="p-8">
+              <div class="flex items-start gap-4 mb-4">
+                <div class={`flex-shrink-0 w-12 h-12 rounded-full bg-opita-${dim.color} text-white flex items-center justify-center font-serif text-xl`}>
+                  {dim.icono}
+                </div>
+                <div>
+                  <h3 class={`text-2xl font-serif text-opita-${dim.color} mb-1`}>
+                    {dim.titulo}
+                  </h3>
+                  <p class="text-sm uppercase tracking-wider text-opita-tierra">
+                    {dim.subtitulo}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 class={`text-2xl font-serif text-opita-${dim.color} mb-1`}>
-                  {dim.titulo}
-                </h3>
-                <p class="text-sm uppercase tracking-wider text-opita-tierra">
-                  {dim.subtitulo}
-                </p>
-              </div>
+              <p class="text-base text-opita-cafe/80 leading-relaxed">
+                {dim.descripcion}
+              </p>
+              <p class={`mt-4 text-sm text-opita-${dim.color} group-hover:underline`}>
+                Entrar a {dim.titulo.toLowerCase()} →
+              </p>
+              <p class="text-[10px] text-opita-cafe/50 italic mt-3">
+                {dim.imagen_credito}
+              </p>
             </div>
-            <p class="text-base text-opita-cafe/80 leading-relaxed">
-              {dim.descripcion}
-            </p>
-            <p class={`mt-4 text-sm text-opita-${dim.color} group-hover:underline`}>
-              Entrar a {dim.titulo.toLowerCase()} →
-            </p>
           </a>
         ))}
       </div>

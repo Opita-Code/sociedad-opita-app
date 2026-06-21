@@ -24,6 +24,7 @@ import Layout from '../layouts/Layout.astro';
 const WHATSAPP_URL = 'https://wa.me/57XXXXXXXXXX';
 
 // 10 diálogos validados (sincrónicos con api/src/personas.ts)
+// imagen_tipo: 'ai' = AI-generated declarado honestamente, 'placeholder' = SVG 1-letter, null = sin imagen
 const personas = [
   {
     nombre: 'Don Rosalío',
@@ -32,14 +33,18 @@ const personas = [
     muletillas: 'asina es la cosa · le digo yo · ni muerto',
     cita: '"Asina es la cosa, mijo: la tierra no se negocia, se hereda."',
     capa: 'Lomnitz A · Dunbar 25',
+    imagen: null,
+    imagen_tipo: null,
   },
   {
     nombre: 'Doña Rosa Elvira',
     rol: 'tendera fiadera',
     arquetipo: 'tendero de pueblo',
-    muletillas: 'mira ve · le cuento · eso sí es verriondo',
+    muletillas: 'mire ve · le cuento · eso sí es verriondo',
     cita: '"Mire ve, le cuento: en esta tienda se sabe quién vive, quién muere y quién fía."',
     capa: 'Lomnitz B · Dunbar 30 (super-spreader 0,55)',
+    imagen: '/persona-dona-rosa.svg',
+    imagen_tipo: 'placeholder',
   },
   {
     nombre: 'Padre Cecilio',
@@ -48,6 +53,8 @@ const personas = [
     muletillas: 'Dios es el que sabe · mijo · rezaremos por ello',
     cita: '"Dios es el que sabe, mijo. Aquí rezamos por vivos y por difuntos por igual."',
     capa: 'Lomnitz A · Dunbar 30',
+    imagen: '/persona-padre-cecilio.svg',
+    imagen_tipo: 'placeholder',
   },
   {
     nombre: 'Doña Prudencia',
@@ -56,6 +63,8 @@ const personas = [
     muletillas: 'Dios mediante · Ave María Purísima · pues sí mijita',
     cita: '"Pues sí mijita, Dios mediante, mañana le llevo un tintico a Doña Rosa."',
     capa: 'Lomnitz A · Dunbar 28',
+    imagen: '/persona-dona-prudencia.jpg',
+    imagen_tipo: 'ai',
   },
   {
     nombre: 'Jhon Eliécer',
@@ -64,6 +73,8 @@ const personas = [
     muletillas: 'pues mira ve · le cuento · eso sí es verriondo',
     cita: '"Pues mira ve, eso sí es verriondo: trabajar la tierra ajena toda la vida."',
     capa: 'Lomnitz A · Dunbar 18',
+    imagen: '/persona-jhon-eliecer.svg',
+    imagen_tipo: 'placeholder',
   },
   {
     nombre: 'Don Octavio',
@@ -72,6 +83,8 @@ const personas = [
     muletillas: 'eso no es así · fíjese pues · le digo por su bien',
     cita: '"Fíjese pues, eso no es así: una agüita de boldo con limoncillo le compone el mal."',
     capa: 'Lomnitz A · Dunbar 26',
+    imagen: '/persona-don-octavio.svg',
+    imagen_tipo: 'placeholder',
   },
   {
     nombre: 'Don Emigdio',
@@ -80,6 +93,8 @@ const personas = [
     muletillas: 'si Dios quiere · pues sí · hay que trabajar',
     cita: '"Si Dios quiere, este año la cosecha se deja ver."',
     capa: 'Lomnitz A · Dunbar 20',
+    imagen: '/persona-don-emigdio.svg',
+    imagen_tipo: 'placeholder',
   },
   {
     nombre: 'Don Eliécer',
@@ -88,6 +103,8 @@ const personas = [
     muletillas: 'le digo yo · eso no se hace · hágale pues',
     cita: '"Hágale pues, mijo, eso no se hace: la finca pide respeto."',
     capa: 'Lomnitz A · Dunbar 22',
+    imagen: '/persona-don-eliecer.jpg',
+    imagen_tipo: 'ai',
   },
   {
     nombre: 'Jhon Jairo',
@@ -96,6 +113,8 @@ const personas = [
     muletillas: 'con Dios · Ave María · Dios mediante',
     cita: '"Dios mediante, hoy la iglesia está de fiesta."',
     capa: 'Lomnitz A · Dunbar 24',
+    imagen: '/persona-jhon-jairo.svg',
+    imagen_tipo: 'placeholder',
   },
   {
     nombre: 'Jhon Fredy',
@@ -104,6 +123,8 @@ const personas = [
     muletillas: 'parce · nojoda · esa vaina',
     cita: '"Parce, nojoda: volví porque Bogotá no era pa mí."',
     capa: 'Lomnitz B · Dunbar 22',
+    imagen: '/persona-jhon-fredy.svg',
+    imagen_tipo: 'placeholder',
   },
 ];
 
@@ -291,9 +312,35 @@ const secciones = [
         {personas.map((p) => (
           <article class="bg-white border-l-4 border-opita-plaza rounded-r-lg p-5 md:p-6 shadow-sm">
             <div class="flex items-start gap-4 mb-3">
-              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-opita-tierra text-opita-arena flex items-center justify-center font-serif text-lg">
-                {p.nombre.replace(/^(Don|Doña|Padre) /, '').charAt(0)}
-              </div>
+              {p.imagen && p.imagen_tipo === 'ai' && (
+                <figure class="flex-shrink-0">
+                  <img
+                    src={p.imagen}
+                    alt={`Retrato AI de ${p.nombre} — generado por IA, no es fotografía documental`}
+                    width="56"
+                    height="56"
+                    loading="lazy"
+                    class="w-14 h-14 rounded-full object-cover border border-opita-tierra/40"
+                  />
+                </figure>
+              )}
+              {p.imagen && p.imagen_tipo === 'placeholder' && (
+                <figure class="flex-shrink-0">
+                  <img
+                    src={p.imagen}
+                    alt={`Marcador tipográfico para ${p.nombre} — sin retrato disponible`}
+                    width="56"
+                    height="56"
+                    loading="lazy"
+                    class="w-14 h-14 rounded-full border border-opita-tierra/40"
+                  />
+                </figure>
+              )}
+              {!p.imagen && (
+                <div class="flex-shrink-0 w-14 h-14 rounded-full bg-opita-tierra text-opita-arena flex items-center justify-center font-serif text-xl">
+                  {p.nombre.replace(/^(Don|Doña|Padre) /, '').charAt(0)}
+                </div>
+              )}
               <div>
                 <h3 class="text-lg font-serif text-opita-cafe leading-tight">
                   {p.nombre}
@@ -301,6 +348,16 @@ const secciones = [
                 <p class="text-xs uppercase tracking-wider text-opita-tierra">
                   {p.rol}
                 </p>
+                {p.imagen_tipo === 'ai' && (
+                  <p class="text-[10px] uppercase tracking-wider text-opita-verriondo mt-1">
+                    Retrato AI — B/N documental inspirado en Benjamín de la Calle y Nereo López; no fotográfico documental
+                  </p>
+                )}
+                {p.imagen_tipo === 'placeholder' && (
+                  <p class="text-[10px] uppercase tracking-wider text-opita-tierra/70 mt-1">
+                    Sin retrato — placeholder tipográfico
+                  </p>
+                )}
               </div>
             </div>
             <p class="text-sm text-opita-cafe/70 italic mb-2">
@@ -317,6 +374,11 @@ const secciones = [
           </article>
         ))}
       </div>
+      <p class="text-xs text-opita-cafe/60 mt-6">
+        Atribución completa de las imágenes de personas: 2 retratos AI declarados honestamente (Doña Prudencia, Don Eliécer);
+        7 marcadores tipográficos como placeholders honestos (Doña Rosa, Padre Cecilio, Jhon Eliécer, Don Octavio, Don Emigdio, Jhon Jairo, Jhon Fredy).
+        Don Rosalío aún no tiene marcador gráfico. Ver <a href="/VISUAL-HONESTY.md" class="underline hover:text-opita-tierra">honestidad visual</a>.
+      </p>
     </section>
 
     <!-- Sección 4: Ground truth ZIP -->
@@ -559,9 +621,30 @@ const secciones = [
         <li class="bg-opita-arena/40 border-l-4 border-opita-adobe rounded-r p-4 md:p-5">
           <strong class="text-opita-cafe">Sin imágenes del pueblo:</strong>
           el municipio carece de archivo fotográfico público. Se usan
-          imágenes departamentales (Huila) como referencia visual.
+          imágenes departamentales (Huila) como referencia visual:
+          <strong>62 fotos reales</strong> de Wikimedia Commons (CC-BY-SA-4.0)
+          de municipios del mismo terreno andino-Magdalena que Tello
+          (Neiva, Gigante, San Agustín, Yaguará, Guadalupe, Acevedo, Pitalito).
+          Estas fotos son la <em>familia visual</em> de Tello, no son
+          Tello. Sustituyen el vacío documental honestamente. Ver
+          <a href="/VISUAL-HONESTY.md" class="underline hover:text-opita-tierra">honestidad visual</a>.
         </li>
       </ul>
+
+      <figure class="mt-8">
+        <img
+          src="/tile-taller.jpg"
+          alt="Horno típico huilense — taller tradicional de cocina artesanal, metáfora del trabajo de campo"
+          width="900"
+          height="1078"
+          loading="lazy"
+          class="w-full h-auto rounded-lg shadow-md max-w-md mx-auto"
+        />
+        <figcaption class="text-xs text-opita-tierra mt-3 italic text-center">
+          Foto: <em>Horno típico del Huila</em> · Wikimedia Commons · CC-BY-SA-4.0.
+          Metáfora visual del <em>taller</em>: trabajo paciente, anónimo, manual — como la investigación de campo en Tello.
+        </figcaption>
+      </figure>
     </section>
 
     <!-- Sección 9: Research ethics -->
