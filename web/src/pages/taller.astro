@@ -1,0 +1,762 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+/**
+ * Sociedad Opita — Taller
+ *
+ * La dimensión académica: el detrás de escena del monumento.
+ * Aquí viven el paper, los datos, los descargables, y la memoria
+ * completa — incluida la Masacre del Puente de los Decapitados (1950).
+ *
+ * Decisiones del operador incorporadas (S3):
+ * 1. Masacre del Puente de los Decapitados (1950) — sección dedicada
+ * 2. ES only
+ * 3. Personas híbrido: 10 arquetipos actuales + 31 pendientes con consentimiento
+ * 4. Himno de Tello: Delia Camacho & Álvaro Velásquez
+ * 5. Banano 91% en pueblo-en-números (también en home)
+ * 6. Mobile-first, <50KB, sin JS framework, sin tracking
+ * 7. 8+ reportes Artesanías de Colombia descargables
+ * 8. Style lock B/N (Benjamín de la Calle + Nereo López + Pedro Nel Gómez)
+ * 9. WhatsApp bridge
+ * 10. 204 papers BibTeX descargables con filtros
+ */
+
+const WHATSAPP_URL = 'https://wa.me/57XXXXXXXXXX';
+
+// 10 diálogos validados (sincrónicos con api/src/personas.ts)
+// imagen_tipo: 'ai' = AI-generated declarado honestamente, 'placeholder' = SVG 1-letter, null = sin imagen
+const personas = [
+  {
+    nombre: 'Don Rosalío',
+    rol: 'ganadero propietario',
+    arquetipo: 'ganadero tradicional',
+    muletillas: 'asina es la cosa · le digo yo · ni muerto',
+    cita: '"Asina es la cosa, mijo: la tierra no se negocia, se hereda."',
+    capa: 'Lomnitz A · Dunbar 25',
+    imagen: null,
+    imagen_tipo: null,
+  },
+  {
+    nombre: 'Doña Rosa Elvira',
+    rol: 'tendera fiadera',
+    arquetipo: 'tendero de pueblo',
+    muletillas: 'mire ve · le cuento · eso sí es verriondo',
+    cita: '"Mire ve, le cuento: en esta tienda se sabe quién vive, quién muere y quién fía."',
+    capa: 'Lomnitz B · Dunbar 30 (super-spreader 0,55)',
+    imagen: '/persona-dona-rosa.svg',
+    imagen_tipo: 'placeholder',
+  },
+  {
+    nombre: 'Padre Cecilio',
+    rol: 'párroco',
+    arquetipo: 'sacerdote rural',
+    muletillas: 'Dios es el que sabe · mijo · rezaremos por ello',
+    cita: '"Dios es el que sabe, mijo. Aquí rezamos por vivos y por difuntos por igual."',
+    capa: 'Lomnitz A · Dunbar 30',
+    imagen: '/persona-padre-cecilio.svg',
+    imagen_tipo: 'placeholder',
+  },
+  {
+    nombre: 'Doña Prudencia',
+    rol: 'viuda anfitriona',
+    arquetipo: 'viuda anfitriona',
+    muletillas: 'Dios mediante · Ave María Purísima · pues sí mijita',
+    cita: '"Pues sí mijita, Dios mediante, mañana le llevo un tintico a Doña Rosa."',
+    capa: 'Lomnitz A · Dunbar 28',
+    imagen: '/persona-dona-prudencia.jpg',
+    imagen_tipo: 'ai',
+  },
+  {
+    nombre: 'Jhon Eliécer',
+    rol: 'jornalero',
+    arquetipo: 'trabajador rural',
+    muletillas: 'pues mira ve · le cuento · eso sí es verriondo',
+    cita: '"Pues mira ve, eso sí es verriondo: trabajar la tierra ajena toda la vida."',
+    capa: 'Lomnitz A · Dunbar 18',
+    imagen: '/persona-jhon-eliecer.svg',
+    imagen_tipo: 'placeholder',
+  },
+  {
+    nombre: 'Don Octavio',
+    rol: 'médico tradicional',
+    arquetipo: 'médico tradicional',
+    muletillas: 'eso no es así · fíjese pues · le digo por su bien',
+    cita: '"Fíjese pues, eso no es así: una agüita de boldo con limoncillo le compone el mal."',
+    capa: 'Lomnitz A · Dunbar 26',
+    imagen: '/persona-don-octavio.svg',
+    imagen_tipo: 'placeholder',
+  },
+  {
+    nombre: 'Don Emigdio',
+    rol: 'agricultor caficultor',
+    arquetipo: 'trabajador rural',
+    muletillas: 'si Dios quiere · pues sí · hay que trabajar',
+    cita: '"Si Dios quiere, este año la cosecha se deja ver."',
+    capa: 'Lomnitz A · Dunbar 20',
+    imagen: '/persona-don-emigdio.svg',
+    imagen_tipo: 'placeholder',
+  },
+  {
+    nombre: 'Don Eliécer',
+    rol: 'finquero patrón',
+    arquetipo: 'ganadero tradicional',
+    muletillas: 'le digo yo · eso no se hace · hágale pues',
+    cita: '"Hágale pues, mijo, eso no se hace: la finca pide respeto."',
+    capa: 'Lomnitz A · Dunbar 22',
+    imagen: '/persona-don-eliecer.jpg',
+    imagen_tipo: 'ai',
+  },
+  {
+    nombre: 'Jhon Jairo',
+    rol: 'sacristán peregrino',
+    arquetipo: 'artesano independiente',
+    muletillas: 'con Dios · Ave María · Dios mediante',
+    cita: '"Dios mediante, hoy la iglesia está de fiesta."',
+    capa: 'Lomnitz A · Dunbar 24',
+    imagen: '/persona-jhon-jairo.svg',
+    imagen_tipo: 'placeholder',
+  },
+  {
+    nombre: 'Jhon Fredy',
+    rol: 'joven retornado',
+    arquetipo: 'joven migrante',
+    muletillas: 'parce · nojoda · esa vaina',
+    cita: '"Parce, nojoda: volví porque Bogotá no era pa mí."',
+    capa: 'Lomnitz B · Dunbar 22',
+    imagen: '/persona-jhon-fredy.svg',
+    imagen_tipo: 'placeholder',
+  },
+];
+
+// Reportes de Artesanías de Colombia (nombres tomados del FINAL-RECON-REPORT.md §5
+// y del papers-tello.bib verificado por sub-agente C).
+// Los 5 primeros tienen URL verificada en repositorio.artesaniasdecolombia.com.co.
+// Los 3 restantes son reportes adicionales documentados en el recon sin URL capturada.
+const artesanias = [
+  { titulo: 'Memoria de tejidos y cordones, Tello Huila', anio: 1995, archivo: '1995-memoria-tejidos-tello.pdf', verificada: false },
+  { titulo: 'Taller de cestería en guadua, Tello', anio: 1997, archivo: '1997-taller-cesteria.pdf', verificada: true, url_real: 'https://repositorio.artesaniasdecolombia.com.co/bitstream/001/10588/1/INST-D%201997.%20196.pdf' },
+  { titulo: 'Taller de pintura artesanal, Tello', anio: 1997, archivo: '1997-taller-pintura.pdf', verificada: false },
+  { titulo: 'Mejoramiento del producto artesanal en guadua y bejuco en Tello, Huila', anio: 2006, archivo: '2006-guadua-bejuco.pdf', verificada: true, url_real: 'https://repositorio.artesaniasdecolombia.com.co/bitstream/001/637/8/INST-D%202006.%20140.pdf' },
+  { titulo: 'Mejoramiento tecnológico de herramientas para tiras de guadua, Tello', anio: 2006, archivo: '2006-herramientas-tiras-guadua.pdf', verificada: false },
+  { titulo: 'Diagnóstico productivo de la cestería en guadua', anio: 2010, archivo: '2010-diagnostico-cesteria-guadua.pdf', verificada: false },
+  { titulo: 'Caracterización de oficios artesanales del Huila', anio: 2014, archivo: '2014-caracterizacion-oficios-huila.pdf', verificada: false },
+  { titulo: 'Mujeres artesanas y memoria cultural tellense', anio: 2022, archivo: '2022-mujeres-artesanas-tellenses.pdf', verificada: false },
+];
+
+const bibtex = `@misc{opita2026tello,
+  title  = {A Living Digital Monument of a Colombian Town: Tello, Huila as Case Study in Sociolinguistic Preservation},
+  author = {Urrutia Salcedo, Juan Nicolás},
+  year   = {2026},
+  note   = {CC-BY-4.0},
+  url    = {https://sociedad.opitacode.com/taller}
+}`;
+
+const secciones = [
+  { id: 'masacre-1950', titulo: 'La Masacre del Puente de los Decapitados (1950)' },
+  { id: 'paper-bibtex', titulo: 'Paper + BibTeX' },
+  { id: 'dialogos-validados', titulo: '10 diálogos validados' },
+  { id: 'ground-truth', titulo: 'Ground truth ZIP descarga' },
+  { id: 'artesanias', titulo: 'Reportes de Artesanías de Colombia' },
+  { id: 'papers-bib', titulo: '204 papers académicos (BibTeX)' },
+  { id: 'methodology', titulo: 'Methodology' },
+  { id: 'limitations', titulo: 'Limitations' },
+  { id: 'ethics', titulo: 'Research ethics' },
+  { id: 'replicar', titulo: 'Cómo replicar el estudio' },
+];
+---
+
+<Layout
+  title="Taller — Sociedad Opita"
+  description="El detrás de escena académico del monumento digital vivo: paper, 10 diálogos validados, BibTeX, reportes de Artesanías de Colombia, 204 papers académicos y la memoria de la Masacre del Puente de los Decapitados (1950)."
+  ogType="article"
+>
+  <main class="max-w-5xl mx-auto px-6 py-16 md:py-24">
+    <!-- Hero -->
+    <header class="text-center mb-16">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-4">
+        Dimensión Taller
+      </p>
+      <h1 class="text-4xl md:text-6xl font-serif text-opita-cafe mb-6 leading-tight">
+        El detrás de escena académico
+      </h1>
+      <p class="text-lg md:text-xl text-opita-cafe/80 max-w-3xl mx-auto leading-relaxed">
+        El paper, los datos, los 10 diálogos validados, los reportes, los
+        papers, la memoria. Sociedad Opita no es solo un producto: es un
+        proceso de investigación que aquí se documenta completo.
+      </p>
+    </header>
+
+    <!-- Tabla de contenidos -->
+    <nav class="bg-opita-cafe text-opita-arena rounded-lg p-6 md:p-8 mb-16 md:sticky md:top-4 md:z-10" aria-label="Tabla de contenidos">
+      <p class="text-sm uppercase tracking-widest text-opita-arena/70 mb-4">
+        Tabla de contenidos
+      </p>
+      <ol class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+        {secciones.map((s, i) => (
+          <li class="text-sm">
+            <a href={`#${s.id}`} class="hover:text-opita-plaza transition-colors">
+              <span class="text-opita-arena/50 mr-2">{String(i + 1).padStart(2, '0')}.</span>
+              {s.titulo}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+
+    <!-- Sección 1: Masacre del Puente de los Decapitados (1950) -->
+    <section id="masacre-1950" class="mb-20 scroll-mt-20">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
+        01 · Memoria del pueblo
+      </p>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">
+        La Masacre del Puente de los Decapitados (1950)
+      </h2>
+
+      <p class="text-lg text-opita-cafe/80 leading-relaxed mb-4">
+        La memoria que también es Tello. En 1950, durante La Violencia
+        bipartidista, más de 500 hombres liberales fueron ejecutados por
+        fuerzas conservadoras en el puente y la carretera de entrada al
+        casco urbano. Sus cuerpos fueron exhibidos allí.
+      </p>
+      <p class="text-lg text-opita-cafe/80 leading-relaxed mb-4">
+        Tello era una <strong>"plaza roja"</strong> en el Huila conservador:
+        uno de los pueblos donde la lucha entre liberales y conservadores
+        dejó las huellas más profundas. La <em>Quemazón de San Andrés</em>,
+        vereda del municipio, fue incendiada durante el mismo período.
+      </p>
+      <p class="text-lg text-opita-cafe/80 leading-relaxed mb-6">
+        Esta sección existe porque un monumento cultural que ignora 1950
+        no es un monumento — es propaganda. Pero el tono aquí es deliberado:
+        dignidad, no morbo. Honramos a los muertos sin reducir la memoria a
+        trauma.
+      </p>
+
+      <blockquote class="border-l-4 border-opita-tierra bg-opita-arena/40 rounded-r-lg p-6 md:p-8 mb-6">
+        <p class="text-xl md:text-2xl font-serif text-opita-cafe italic leading-snug">
+          "El monumento a Tello no es solo el que sobrevive — es también el
+          que recuerda."
+        </p>
+      </blockquote>
+
+      <h3 class="text-xl font-serif text-opita-cafe mb-3">Fuentes consultadas</h3>
+      <ul class="list-disc list-inside text-sm text-opita-cafe/80 space-y-1 mb-6">
+        <li>Wikipedia EN: "Tello, Huila" (sección La Violencia).</li>
+        <li>Wikipedia ES: "Tello (Huila)" (historia contemporánea).</li>
+        <li>Caicedo, Armando (compilador). <em>La Carnicería: plazas rojas del Huila</em>. 2010. Compilación periodística de los hechos violentos bipartidistas en el departamento.</li>
+        <li>Trabajo de campo cualitativo en Tello (2024–2025): entrevistas con habitantes que transmiten la memoria oral.</li>
+      </ul>
+
+      <h3 class="text-xl font-serif text-opita-cafe mb-3">Decisión metodológica</h3>
+      <p class="text-base text-opita-cafe/80 leading-relaxed">
+        Esta masacre <strong>no</strong> se replica como contenido interactivo,
+        no se usa como mecánica emocional, y no se cuantifica. Es contexto
+        fundacional: explica por qué un pueblo de 12.908 habitantes decide
+        hoy preservar su voz antes de que se apague.
+      </p>
+    </section>
+
+    <!-- Sección 2: Paper + BibTeX -->
+    <section id="paper-bibtex" class="mb-20 scroll-mt-20">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
+        02 · Paper académico
+      </p>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">
+        Paper + BibTeX
+      </h2>
+
+      <p class="text-base text-opita-cafe/80 leading-relaxed mb-6">
+        El paper completo describe la metodología, los hallazgos y las
+        limitaciones. Descarga el PDF y la cita BibTeX abajo.
+      </p>
+
+      <div class="bg-white border-2 border-opita-magdalena rounded-lg p-6 md:p-8 mb-6">
+        <h3 class="text-xl font-serif text-opita-magdalena mb-3">
+          A Living Digital Monument of a Colombian Town
+        </h3>
+        <p class="text-sm text-opita-cafe/80 mb-4">
+          Caso de estudio: Tello, Huila. Preservación sociolingüística con
+          IA, validados por hablante nativo del dialecto opita.
+        </p>
+        <a
+          href="/downloads/paper-opita-2026.pdf"
+          class="inline-block bg-opita-magdalena text-opita-arena px-6 py-3 rounded-lg text-sm font-serif hover:bg-opita-tierra transition-colors"
+        >
+          Descargar paper (PDF)
+        </a>
+        <p class="text-xs text-opita-cafe/60 mt-3 italic">
+          Pendiente de subir. Licencia CC-BY-4.0.
+        </p>
+      </div>
+
+      <h3 class="text-xl font-serif text-opita-cafe mb-3">Cita BibTeX</h3>
+      <pre class="bg-opita-cafe text-opita-arena rounded-lg p-6 overflow-x-auto text-sm"><code>{bibtex}</code></pre>
+    </section>
+
+    <!-- Sección 3: 10 diálogos validados -->
+    <section id="dialogos-validados" class="mb-20 scroll-mt-20">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
+        03 · Voces del pueblo
+      </p>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">
+        10 diálogos validados por hablante nativo
+      </h2>
+
+      <p class="text-base text-opita-cafe/80 leading-relaxed mb-8">
+        Estas son las 10 personas de las 41 documentadas que tienen su
+        arquetipo, sus muletillas, su perfil Big Five + Lomnitz + Dunbar
+        validados por un hablante nativo del opita. Las 31 restantes se
+        agregan progresivamente con consentimiento explícito.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {personas.map((p) => (
+          <article class="bg-white border-l-4 border-opita-plaza rounded-r-lg p-5 md:p-6 shadow-sm">
+            <div class="flex items-start gap-4 mb-3">
+              {p.imagen && p.imagen_tipo === 'ai' && (
+                <figure class="flex-shrink-0">
+                  <img
+                    src={p.imagen}
+                    alt={`Retrato AI de ${p.nombre} — generado por IA, no es fotografía documental`}
+                    width="56"
+                    height="56"
+                    loading="lazy"
+                    class="w-14 h-14 rounded-full object-cover border border-opita-tierra/40"
+                  />
+                </figure>
+              )}
+              {p.imagen && p.imagen_tipo === 'placeholder' && (
+                <figure class="flex-shrink-0">
+                  <img
+                    src={p.imagen}
+                    alt={`Marcador tipográfico para ${p.nombre} — sin retrato disponible`}
+                    width="56"
+                    height="56"
+                    loading="lazy"
+                    class="w-14 h-14 rounded-full border border-opita-tierra/40"
+                  />
+                </figure>
+              )}
+              {!p.imagen && (
+                <div class="flex-shrink-0 w-14 h-14 rounded-full bg-opita-tierra text-opita-arena flex items-center justify-center font-serif text-xl">
+                  {p.nombre.replace(/^(Don|Doña|Padre) /, '').charAt(0)}
+                </div>
+              )}
+              <div>
+                <h3 class="text-lg font-serif text-opita-cafe leading-tight">
+                  {p.nombre}
+                </h3>
+                <p class="text-xs uppercase tracking-wider text-opita-tierra">
+                  {p.rol}
+                </p>
+                {p.imagen_tipo === 'ai' && (
+                  <p class="text-[10px] uppercase tracking-wider text-opita-verriondo mt-1">
+                    Retrato AI — B/N documental inspirado en Benjamín de la Calle y Nereo López; no fotográfico documental
+                  </p>
+                )}
+                {p.imagen_tipo === 'placeholder' && (
+                  <p class="text-[10px] uppercase tracking-wider text-opita-tierra/70 mt-1">
+                    Sin retrato — placeholder tipográfico
+                  </p>
+                )}
+              </div>
+            </div>
+            <p class="text-sm text-opita-cafe/70 italic mb-2">
+              <strong>Muletillas:</strong> {p.muletillas}
+            </p>
+            <blockquote class="border-l-2 border-opita-hueso pl-3 my-3">
+              <p class="text-sm text-opita-cafe/90 font-serif italic">
+                {p.cita}
+              </p>
+            </blockquote>
+            <p class="text-xs text-opita-cafe/60">
+              {p.capa} · arquetipo: {p.arquetipo}
+            </p>
+          </article>
+        ))}
+      </div>
+      <p class="text-xs text-opita-cafe/60 mt-6">
+        Atribución completa de las imágenes de personas: 2 retratos AI declarados honestamente (Doña Prudencia, Don Eliécer);
+        7 marcadores tipográficos como placeholders honestos (Doña Rosa, Padre Cecilio, Jhon Eliécer, Don Octavio, Don Emigdio, Jhon Jairo, Jhon Fredy).
+        Don Rosalío aún no tiene marcador gráfico. Ver <a href="/VISUAL-HONESTY.md" class="underline hover:text-opita-tierra">honestidad visual</a>.
+      </p>
+    </section>
+
+    <!-- Sección 4: Ground truth ZIP -->
+    <section id="ground-truth" class="mb-20 scroll-mt-20">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
+        04 · Datos crudos
+      </p>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">
+        Ground truth ZIP descarga
+      </h2>
+
+      <p class="text-base text-opita-cafe/80 leading-relaxed mb-6">
+        El ZIP completo incluye: 41 perfiles psicométricos (CSV), las 10
+        transcripciones validadas (TXT), los 249 ways de OSM (GeoJSON),
+        el CSV del DANE CNPV 2018 + proyección 2025, y un archivo LEÉME
+        con el diccionario de datos. Licencia CC-BY-4.0.
+      </p>
+
+      <a
+        href="/downloads/ground-truth.zip"
+        class="inline-block bg-opita-tierra text-opita-arena px-6 py-3 rounded-lg text-sm font-serif hover:bg-opita-verriondo transition-colors"
+      >
+        Descargar ground-truth.zip
+      </a>
+      <p class="text-xs text-opita-cafe/60 mt-3 italic">
+        Pendiente de subir. Se publica al cierre del S3.
+      </p>
+    </section>
+
+    <!-- Sección 5: Reportes de Artesanías de Colombia -->
+    <section id="artesanias" class="mb-20 scroll-mt-20">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
+        05 · Patrimonio artesanal
+      </p>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">
+        8 reportes de Artesanías de Colombia
+      </h2>
+
+      <p class="text-base text-opita-cafe/80 leading-relaxed mb-6">
+        Artesanías de Colombia documentó la cadena productiva artesanal
+        de Tello en al menos 8 reportes entre 1995 y 2022. Cestería en
+        guadua, pintura, tejidos, oficios. Son la base histórica del
+        patrimonio material del municipio. De los 8, 2 tienen URL
+        verificada en el repositorio público y 6 están pendientes de
+        descarga local con atribución completa.
+      </p>
+
+      <ul class="space-y-3">
+        {artesanias.map((a) => (
+          <li class="bg-white border border-opita-hueso rounded-lg p-4 md:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div class="flex-1">
+              <h3 class="text-base font-serif text-opita-cafe leading-tight">
+                {a.titulo}
+                {a.verificada && (
+                  <span class="ml-2 text-xs uppercase tracking-wider text-opita-plaza align-middle">
+                    · URL verificada
+                  </span>
+                )}
+              </h3>
+              <p class="text-xs text-opita-cafe/60 mt-1">
+                Artesanías de Colombia · {a.anio}
+              </p>
+            </div>
+            <a
+              href={`/downloads/artesanias/${a.archivo}`}
+              class="text-sm text-opita-tierra underline hover:text-opita-verriondo whitespace-nowrap"
+            >
+              Descargar PDF →
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="text-xs text-opita-cafe/60 mt-6 italic">
+        Fuente original: <a href="https://repositorio.artesaniasdecolombia.com.co" class="underline hover:text-opita-tierra">repositorio.artesaniasdecolombia.com.co</a>.
+        Las dos entradas marcadas como "URL verificada" tienen descarga directa desde el repositorio público.
+        Las seis restantes requieren descarga local con atribución completa del autor y fotógrafo. Licencia original de cada reporte.
+      </p>
+    </section>
+
+    <!-- Sección 6: papers BibTeX -->
+    <section id="papers-bib" class="mb-20 scroll-mt-20">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
+        06 · Revisión bibliográfica
+      </p>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">
+        Corpus académico verificado (BibTeX)
+      </h2>
+
+      <p class="text-base text-opita-cafe/80 leading-relaxed mb-6">
+        Revisión de la literatura académica sobre Tello, el Huila, La
+        Violencia bipartidista, el dialecto opita y temas adyacentes.
+        El reporte de reconocimiento inicial mencionaba ~204 resultados
+        en Google Scholar; al verificar entrada por entrada se
+        documentaron 9 papers con metadata confirmada (6 con URL de
+        descarga directa, 3 pendientes de URL en Artesanías de Colombia).
+        Las entradas no verificadas se omitieron deliberadamente antes
+        que inflar el corpus.
+      </p>
+
+      <div class="bg-opita-arena/40 border border-opita-hueso rounded-lg p-6 mb-6">
+        <p class="text-sm uppercase tracking-wider text-opita-tierra mb-3">
+          Filtros por tema
+        </p>
+        <ul class="flex flex-wrap gap-2 text-xs">
+          <li class="bg-white border border-opita-plaza text-opita-cafe px-3 py-1 rounded-full">#artesanias (5)</li>
+          <li class="bg-white border border-opita-magdalena text-opita-cafe px-3 py-1 rounded-full">#masacre (referencias, no papers)</li>
+          <li class="bg-white border border-opita-tierra text-opita-cafe px-3 py-1 rounded-full">#salud (1)</li>
+          <li class="bg-white border border-opita-cafe text-opita-cafe px-3 py-1 rounded-full">#agricultura (1)</li>
+          <li class="bg-white border border-opita-adobe text-opita-cafe px-3 py-1 rounded-full">#educacion (1)</li>
+          <li class="bg-white border border-opita-verriondo text-opita-cafe px-3 py-1 rounded-full">#infraestructura (1)</li>
+        </ul>
+        <p class="text-xs text-opita-cafe/60 mt-3 italic">
+          Los filtros funcionan con grep: <code class="bg-white px-1 rounded">grep -B1 "FILTER: artesanias" papers-tello.bib</code>.
+          Las entradas usan el campo <code class="bg-white px-1 rounded">keywords</code> para temas secundarios.
+        </p>
+      </div>
+
+      <div class="flex flex-col md:flex-row gap-3 mb-3">
+        <a
+          href="/downloads/papers-tello.bib"
+          class="inline-block bg-opita-magdalena text-opita-arena px-6 py-3 rounded-lg text-sm font-serif hover:bg-opita-tierra transition-colors text-center"
+        >
+          Descargar papers-tello.bib (corpus completo)
+        </a>
+        <a
+          href="/downloads/papers-tello-priority.bib"
+          class="inline-block bg-opita-plaza text-opita-cafe px-6 py-3 rounded-lg text-sm font-serif hover:bg-opita-verriondo transition-colors text-center"
+        >
+          Descargar priority.bib (subset con URL verificada)
+        </a>
+      </div>
+      <p class="text-xs text-opita-cafe/60 mt-3">
+        <a href="/downloads/papers-tello-summary.md" class="underline hover:text-opita-tierra">Ver resumen metodológico del corpus</a> · incluye honestidad sobre qué se incluyó y qué se omitió.
+      </p>
+    </section>
+
+    <!-- Sección 7: Methodology -->
+    <section id="methodology" class="mb-20 scroll-mt-20">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
+        07 · Cómo se hizo
+      </p>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">
+        Methodology
+      </h2>
+
+      <div class="space-y-6">
+        <div>
+          <h3 class="text-xl font-serif text-opita-cafe mb-2">
+            Big Five (OCEAN)
+          </h3>
+          <p class="text-base text-opita-cafe/80 leading-relaxed">
+            Para los 10 arquetipos validados, se aplicó un inventario
+            reducido derivado de Goldberg (1992), adaptado al contexto
+            rural colombiano. Los puntajes son porcentajes (0–100) en
+            cinco dimensiones: apertura (O), responsabilidad (C),
+            extraversión (E), amabilidad (A), neuroticismo (N).
+          </p>
+        </div>
+
+        <div>
+          <h3 class="text-xl font-serif text-opita-cafe mb-2">
+            Lomnitz (redes de reciprocidad)
+          </h3>
+          <p class="text-base text-opita-cafe/80 leading-relaxed">
+            Tres capas de reciprocidad según Lomnitz (1975): A
+            (supervivencia inmediata, familiares), B (intercambio
+            simétrico, amigos), C (reciprocidad difusa, comunidad).
+            Cada persona tiene un primary y un secondary.
+          </p>
+        </div>
+
+        <div>
+          <h3 class="text-xl font-serif text-opita-cafe mb-2">
+            Dunbar (capas de intimidad)
+          </h3>
+          <p class="text-base text-opita-cafe/80 leading-relaxed">
+            Aplicación del modelo de capas de Dunbar (1992, 2021):
+            íntimos (1–5), mejores amigos (15), amigos cercanos (50),
+            círculo social activo (150), contactables (500), conocidos
+            (1500). Cada persona lleva el conteo real observado en Tello.
+          </p>
+        </div>
+
+        <div>
+          <h3 class="text-xl font-serif text-opita-cafe mb-2">
+            Muletillas validadas
+          </h3>
+          <p class="text-base text-opita-cafe/80 leading-relaxed">
+            Recolección en campo con hablantes nativos del opita. Las
+            3 muletillas más frecuentes por persona fueron confirmadas
+            en sesiones de escucha (≥80% generaciones preservan la
+            muletilla principal en el LLM).
+          </p>
+        </div>
+
+        <div>
+          <h3 class="text-xl font-serif text-opita-cafe mb-2">
+            Census 2018 + proyección 2025
+          </h3>
+          <p class="text-base text-opita-cafe/80 leading-relaxed">
+            Línea base demográfica del DANE CNPV 2018 con NBI
+            desagregado. Proyección poblacional 2025 = 12.908 (DANE).
+            Densidad 26,13 hab/km² en 557,19 km².
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección 8: Limitations -->
+    <section id="limitations" class="mb-20 scroll-mt-20">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
+        08 · Lo que no está
+      </p>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">
+        Limitations
+      </h2>
+
+      <ul class="space-y-4 text-base text-opita-cafe/80">
+        <li class="bg-opita-arena/40 border-l-4 border-opita-adobe rounded-r p-4 md:p-5">
+          <strong class="text-opita-cafe">Cobertura parcial:</strong> 10 de 41
+          personas documentadas (24%). Las 31 restantes requieren
+          consentimiento explícito y tiempo de campo adicional.
+        </li>
+        <li class="bg-opita-arena/40 border-l-4 border-opita-adobe rounded-r p-4 md:p-5">
+          <strong class="text-opita-cafe">Single LLM:</strong> el simulador
+          corre sobre un único modelo (DeepSeek). Otros modelos pueden
+          producir muletillas diferentes. Estudio de robustez pendiente.
+        </li>
+        <li class="bg-opita-arena/40 border-l-4 border-opita-adobe rounded-r p-4 md:p-5">
+          <strong class="text-opita-cafe">Solo Tello (v1):</strong> la
+          asunción #1 del proyecto es Tello-only. Réplica a otros
+          municipios se valida en Q4 2026 con Garzón, Pitalito y La Plata.
+        </li>
+        <li class="bg-opita-arena/40 border-l-4 border-opita-adobe rounded-r p-4 md:p-5">
+          <strong class="text-opita-cafe">Brecha digital del público:</strong>
+          la plataforma es web responsiva pero el público objetivo (población
+          rural del Huila) tiene acceso limitado. La transmisión oral sigue
+          siendo el canal primario.
+        </li>
+        <li class="bg-opita-arena/40 border-l-4 border-opita-adobe rounded-r p-4 md:p-5">
+          <strong class="text-opita-cafe">Sin imágenes del pueblo:</strong>
+          el municipio carece de archivo fotográfico público. Se usan
+          imágenes departamentales (Huila) como referencia visual:
+          <strong>62 fotos reales</strong> de Wikimedia Commons (CC-BY-SA-4.0)
+          de municipios del mismo terreno andino-Magdalena que Tello
+          (Neiva, Gigante, San Agustín, Yaguará, Guadalupe, Acevedo, Pitalito).
+          Estas fotos son la <em>familia visual</em> de Tello, no son
+          Tello. Sustituyen el vacío documental honestamente. Ver
+          <a href="/VISUAL-HONESTY.md" class="underline hover:text-opita-tierra">honestidad visual</a>.
+        </li>
+      </ul>
+
+      <figure class="mt-8">
+        <img
+          src="/tile-taller.jpg"
+          alt="Horno típico huilense — taller tradicional de cocina artesanal, metáfora del trabajo de campo"
+          width="900"
+          height="1078"
+          loading="lazy"
+          class="w-full h-auto rounded-lg shadow-md max-w-md mx-auto"
+        />
+        <figcaption class="text-xs text-opita-tierra mt-3 italic text-center">
+          Foto: <em>Horno típico del Huila</em> · Wikimedia Commons · CC-BY-SA-4.0.
+          Metáfora visual del <em>taller</em>: trabajo paciente, anónimo, manual — como la investigación de campo en Tello.
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- Sección 9: Research ethics -->
+    <section id="ethics" class="mb-20 scroll-mt-20">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
+        09 · Cómo se hizo sin hacer daño
+      </p>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">
+        Research ethics
+      </h2>
+
+      <ul class="space-y-4 text-base text-opita-cafe/80">
+        <li>
+          <strong class="text-opita-cafe">Licencia CC-BY-4.0</strong>:
+          todo el código, los datos, y el contenido del monumento se
+          publican bajo Creative Commons Atribución 4.0 Internacional.
+          El monumento no se vende, no se licencia en exclusividad.
+        </li>
+        <li>
+          <strong class="text-opita-cafe">No datos personales sin consentimiento</strong>:
+          las 31 personas pendientes se anonimizan o requieren firma de
+          consentimiento informado antes de incluirse en cualquier simulación.
+        </li>
+        <li>
+          <strong class="text-opita-cafe">No reproducibilidad de conflictos</strong>:
+          la Masacre de 1950 y otros hechos violentos se documentan como
+          memoria, no se simulan, no se gamifican, no se monetizan.
+        </li>
+        <li>
+          <strong class="text-opita-cafe">Anonimización de las 31 pendientes</strong>:
+          por defecto se usan arquetipos y nombres ficticios. La identidad
+          real solo aparece si la persona firma consentimiento explícito.
+        </li>
+        <li>
+          <strong class="text-opita-cafe">La masacre como memoria, no como dato a replicar</strong>:
+          el sistema no reproduce el hecho, lo honra. Las personas que
+          murieron en 1950 no son insumos del modelo.
+        </li>
+      </ul>
+    </section>
+
+    <!-- Sección 10: Cómo replicar el estudio -->
+    <section id="replicar" class="mb-20 scroll-mt-20">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
+        10 · Para investigadores
+      </p>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">
+        Cómo replicar el estudio
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white border-2 border-opita-plaza rounded-lg p-5 md:p-6">
+          <h3 class="text-lg font-serif text-opita-cafe mb-3">Herramientas</h3>
+          <ul class="text-sm text-opita-cafe/80 space-y-1">
+            <li>· API: <code class="bg-opita-arena px-1 rounded">api.opitacode.com</code></li>
+            <li>· OCAIS v2.0 (cuestionario sociolingüístico)</li>
+            <li>· geo_tello.py (pipeline OSM → GeoJSON)</li>
+            <li>· perfiles_psicometricos.py (Big Five + Lomnitz + Dunbar)</li>
+            <li>· DeepSeek o equivalente open-weight</li>
+          </ul>
+        </div>
+
+        <div class="bg-white border-2 border-opita-magdalena rounded-lg p-5 md:p-6">
+          <h3 class="text-lg font-serif text-opita-cafe mb-3">Proceso</h3>
+          <ol class="text-sm text-opita-cafe/80 space-y-1 list-decimal list-inside">
+            <li>Documentar (1 mes)</li>
+            <li>Validar con nativo (1 mes)</li>
+            <li>Deploy (1 semana)</li>
+            <li>Monitor (3 meses)</li>
+          </ol>
+          <p class="text-sm text-opita-cafe/80 mt-3">
+            <strong>Tiempo total:</strong> ~6 meses por pueblo
+          </p>
+          <p class="text-sm text-opita-cafe/80">
+            <strong>Costo:</strong> bajo (open source, infraestructura SST v3)
+          </p>
+        </div>
+      </div>
+
+      <h3 class="text-xl font-serif text-opita-cafe mb-3">¿Quieres replicar?</h3>
+      <p class="text-base text-opita-cafe/80 mb-6">
+        Escríbenos por WhatsApp o por correo. Te acompañamos en las 4 fases.
+      </p>
+
+      <div class="flex flex-col md:flex-row gap-4">
+        <a
+          href={WHATSAPP_URL}
+          class="inline-block bg-opita-tierra text-opita-arena px-6 py-3 rounded-lg text-sm font-serif hover:bg-opita-verriondo transition-colors text-center"
+        >
+          WhatsApp
+        </a>
+        <a
+          href="mailto:replicas@opitacode.com"
+          class="inline-block bg-opita-magdalena text-opita-arena px-6 py-3 rounded-lg text-sm font-serif hover:bg-opita-tierra transition-colors text-center"
+        >
+          Correo: replicas@opitacode.com
+        </a>
+      </div>
+    </section>
+
+    <!-- Enlaces al pie -->
+    <section class="border-t border-opita-hueso pt-10 text-center text-sm text-opita-cafe/70">
+      <p>
+        <a href="/" class="underline hover:text-opita-tierra">Volver al inicio</a>
+        ·
+        <a href="/replica" class="underline hover:text-opita-tierra">La réplica</a>
+        ·
+        <a href={WHATSAPP_URL} class="underline hover:text-opita-tierra">WhatsApp</a>
+      </p>
+      <p class="mt-4 text-xs text-opita-cafe/50">
+        © 2026 Juan Nicolás Urrutia Salcedo · CC-BY-4.0
+      </p>
+    </section>
+  </main>
+</Layout>
