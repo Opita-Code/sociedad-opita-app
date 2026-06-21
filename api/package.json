@@ -24,8 +24,10 @@
     "sst": "^3.14.2"
   },
   "devDependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "@tsconfig/node22": "^22.0.5",
     "@types/node": "^22.0.0",
+    "tsx": "4.22.4",
     "typescript": "^5.7.0",
     "vitest": "^3.2.1"
   }
