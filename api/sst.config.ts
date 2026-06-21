@@ -143,13 +143,23 @@ export default $config({
     });
 
     // ─── Router (api.sociedad.opitacode.com) ───────────────────
+    // The /v1/dialogue endpoint streams an SSE response from MiniMax-M3
+    // that takes 10-20s in practice. CloudFront's default route
+    // readTimeout is 20s, which produces 504s on long streams. Bump
+    // it to 60s (the documented max) to give the LLM room. The
+    // keepAliveTimeout is bumped too so a slow chunk in the middle
+    // of the stream doesn't drop the connection.
     const router = new sst.aws.Router("ApiRouter", {
       domain:
         $app.stage === "prod"
           ? "api.sociedad.opitacode.com"
           : `api-dev.sociedad.opitacode.com`,
       routes: {
-        "/*": apiFn.url,
+        "/*": {
+          url: apiFn.url,
+          readTimeout: "60 seconds",
+          keepAliveTimeout: "60 seconds",
+        },
       },
     });
 
