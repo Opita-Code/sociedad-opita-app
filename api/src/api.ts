@@ -4,17 +4,23 @@
  * Endpoints:
  * - GET  /v1/cities                  -> lista de ciudades
  * - GET  /v1/cities/:id/personas     -> personas de una ciudad
- * - POST /v1/simulate                -> genera dialogo LLM con @opita/ocais
+ * - GET  /v1/personas/:city_id       -> alias slimmer de /v1/cities/:id/personas (PR #9)
+ * - POST /v1/simulate                -> genera dialogo LLM con @opita/ocais (kept for backward compat)
+ * - POST /v1/dialogue                -> SSE stream con RAG + persona + estado (PR #9)
  * - GET  /v1/stream                  -> SSE stream del pueblo (S2)
  * - WS   /v1/chat                    -> WebSocket chat con personajes (S2)
  *
- * Stack: Hono (4KB router) + @opita/ocais (streaming) + SST (deploy).
+ * Stack: Hono (4KB router) + @opita/ocais (streaming) + PR #5 (provider with
+ * retry + cost + rate-limit) + PR #6 (RAG retrieve + corpus loader) + PR #7
+ * (state store: persona-state, conversation) + PR #9 (dialogue composition).
  */
 
 import { Hono } from "hono";
 import { streamText, openai, createSSEWriter } from "@opita/ocais";
 import type { Context } from "hono";
 import { CIUDADES, TELLO_PERSONAS, type Persona } from "./personas";
+import dialogueApp from "./handlers/dialogue";
+import personasApp from "./handlers/personas";
 
 const app = new Hono();
 
@@ -47,6 +53,9 @@ app.get("/v1/cities/:id/personas", (c) => {
   if (!ciudad) return c.json({ error: `Ciudad '${c.req.param("id")}' no encontrada` }, 404);
   return c.json({ personas: ciudad.personas });
 });
+
+// PR #9: alias slimmer para /v1/personas/:city_id (usado por el frontend)
+app.route("/", personasApp);
 
 // POST /v1/simulate
 app.post("/v1/simulate", async (c) => {
@@ -120,6 +129,9 @@ app.post("/v1/simulate", async (c) => {
 
 // Constructor de prompt — placeholder de las 7 capas sociolinguisticas + 13 anti-slop
 // TODO S2: portar prompt_builder.py completo a TypeScript
+//
+// PR #9: el handler /v1/dialogue usa un prompt builder más rico en
+// api/src/context/builder.ts (Big Five + Lomnitz + Dunbar + RAG top-k).
 function buildSystemPrompt(persona: Persona): string {
   return `Eres ${persona.display_name}, ${persona.role} de Tello, Huila (Colombia).
 Tu forma de hablar incluye muletillas como: ${persona.muletillas.slice(0, 3).join(", ")}.
@@ -140,6 +152,16 @@ function estimateCost(text: string, model: string): number {
   const costPer1M = model.includes("reasoner") ? 2.19 : 0.14;
   return (outputTokens / 1_000_000) * costPer1M;
 }
+
+// PR #9: monta el handler /v1/dialogue (SSE con OCAIS + RAG + estado)
+app.route("/", dialogueApp);
+
+/**
+ * Named export of the Hono app for integration/smoke tests.
+ * The Lambda entry point is still `handler` (below); this is purely for
+ * the vitest suite (see tests/smoke.test.ts, tests/api.test.ts).
+ */
+export { app as honoApp };
 
 // SST Lambda handler — convierte el evento AWS_PROXY a request Hono
 export const handler = async (event: any) => {

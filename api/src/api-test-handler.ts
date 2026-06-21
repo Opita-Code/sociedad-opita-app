@@ -1,10 +1,16 @@
 /**
  * Test handler — wrapper que expone la app de Hono sin el SST handler wrapper.
  * Asi podemos testear con vitest sin necesidad de mockear AWS Lambda.
+ *
+ * PR #9: mounted the dialogue + personas sub-apps so smoke tests exercise
+ * the SAME routing composition that api.ts uses in production. This is the
+ * single source of truth for the HTTP-level smoke verification.
  */
 
 import { Hono } from "hono";
 import { CIUDADES, TELLO_PERSONAS, type Persona } from "./personas";
+import dialogueApp from "./handlers/dialogue";
+import personasApp from "./handlers/personas";
 
 export const app = new Hono();
 
@@ -42,3 +48,8 @@ app.post("/v1/simulate", async (c) => {
   if (!persona) return c.json({ error: `Persona '${body.persona_id}' no encontrada` }, 404);
   return c.json({ ok: true, persona: persona.display_name });
 });
+
+// PR #9: smoke-test the dialogue composition + personas alias via these mounts.
+app.route("/", personasApp);
+app.route("/", dialogueApp);
+
