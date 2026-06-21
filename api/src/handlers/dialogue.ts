@@ -16,6 +16,8 @@
  *     ├── 5. getPersonaState(personaId) — informational only in Phase 1
  *     │
  *     ├── 6. buildContext(persona, scene, topK, query) → { system, user }
+ *     │       (buildContext also sanitizes the query: strips role markers
+ *     │        and control chars, caps at 1000 chars — see builder.ts)
  *     │
  *     ├── 7. ocaisStream(system, user) → SSE chunks
  *     │
@@ -28,9 +30,20 @@
  * The handler is mounted on the main Hono app from api/src/api.ts via
  * `app.route("/", dialogueApp)` so the /v1/dialogue path is served.
  *
+ * Polish R5 (security hardening):
+ *   - Validation lives in ./validation.ts (typed, TDD-covered edge cases:
+ *     persona whitelist, time regex, length caps, conv_id regex, control
+ *     char stripping, opita unicode preservation).
+ *   - The query is ALSO sanitized inside buildContext (role-marker
+ *     stripping) — defense in depth, not redundant: the validator caps
+ *     length and type-checks, the builder neutralizes prompt-injection
+ *     shapes (e.g., "system: ..." appearing on a new line in a long
+ *     multi-paragraph question).
+ *
  * Error policy:
  *   - 400 invalid_json (malformed body)
- *   - 400 missing_required_fields
+ *   - 400 validation_failed (per-field errors from validation.ts)
+ *   - 400 missing_required_fields (kept for backward compat with PR #9)
  *   - 404 persona_not_found
  *   - 500 internal_error (corpus load / embed / context / state fails)
  *   - SSE errors mid-stream are emitted as `data: {"error": "stream_error", "message": "..."}`
@@ -42,9 +55,10 @@ import { estimateCost } from "../llm/cost-tracker";
 import { retrieve, loadCorpus } from "../rag/retrieve";
 import { embedQuery } from "../rag/embed-query";
 import { buildContext, type Scene } from "../context/builder";
-import { TELLO_PERSONAS, type Persona } from "../personas";
+import { TELLO_PERSONAS } from "../personas";
 import { getPersonaState } from "../state/persona-state";
 import { appendTurn } from "../state/conversation";
+import { validateDialogueRequest } from "./validation";
 
 const app = new Hono();
 
@@ -66,43 +80,28 @@ async function getOrLoadCorpus(): Promise<Corpus> {
 }
 
 app.post("/v1/dialogue", async (c: Context) => {
-  // 1. Parse + validate body
-  let body: {
-    persona_id?: string;
-    scene?: { time?: string; place?: string; weather?: string };
-    query?: string;
-    conv_id?: string;
-  };
+  // 1. Parse JSON body (raw — validation runs in step 1b).
+  let body: unknown;
   try {
-    body = (await c.req.json()) as typeof body;
+    body = await c.req.json();
   } catch {
     return c.json({ error: "invalid_json" }, 400);
   }
 
-  const { persona_id, scene, query, conv_id } = body;
-
-  if (!persona_id || !scene || !query) {
+  // 1b. Centralized validation (Polish R5).
+  const validation = validateDialogueRequest(body);
+  if (!validation.ok) {
     return c.json(
-      {
-        error: "missing_required_fields",
-        required: ["persona_id", "scene", "query"],
-      },
+      { error: "validation_failed", errors: validation.errors },
       400,
     );
   }
-  if (!scene.time || !scene.place) {
-    return c.json(
-      {
-        error: "missing_required_fields",
-        required: ["scene.time", "scene.place"],
-      },
-      400,
-    );
-  }
+  const { persona_id, scene, query, conv_id } = validation.data;
 
-  const persona: Persona | undefined = TELLO_PERSONAS.find(
-    (p) => p.persona_id === persona_id,
-  );
+  // 1c. Persona lookup (defense in depth — the validator already
+  // checked the whitelist, but a future re-shuffling of personas.ts
+  // could desync; this lookup is the actual source of truth).
+  const persona = TELLO_PERSONAS.find((p) => p.persona_id === persona_id);
   if (!persona) {
     return c.json({ error: "persona_not_found", persona_id }, 404);
   }
@@ -114,15 +113,15 @@ app.post("/v1/dialogue", async (c: Context) => {
     const topK = retrieve(queryEmb, corpus, 4);
 
     const validatedScene: Scene = {
-      time: scene.time!,
-      place: scene.place!,
+      time: scene.time,
+      place: scene.place,
       weather: scene.weather,
     };
 
     // 5. Persona state (best-effort; informational in Phase 1)
     const personaState = await getPersonaState(persona_id).catch(() => null);
 
-    // 6. Build context
+    // 6. Build context (also sanitizes the query — see builder.ts)
     const { system, user } = buildContext(persona, validatedScene, topK, query);
 
     // 7. Stream OCAIS chunks as SSE

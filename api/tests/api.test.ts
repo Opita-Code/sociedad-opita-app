@@ -147,7 +147,7 @@ describe("PR #9: POST /v1/dialogue (smoke)", () => {
     expect(body.error).toBe("invalid_json");
   });
 
-  it("returns 404 for unknown persona", async () => {
+  it("returns 400 with validation_failed for unknown persona (whitelist)", async () => {
     const res = await app.request("/v1/dialogue", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -157,9 +157,13 @@ describe("PR #9: POST /v1/dialogue (smoke)", () => {
         query: "hola",
       }),
     });
-    expect(res.status).toBe(404);
-    const body = (await res.json()) as { error: string };
-    expect(body.error).toBe("persona_not_found");
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as {
+      error: string;
+      errors: Array<{ field: string; message: string }>;
+    };
+    expect(body.error).toBe("validation_failed");
+    expect(body.errors.find((e) => e.field === "persona_id")).toBeDefined();
   });
 
   it("returns 200 SSE with text + cost chunks (mocked OCAIS)", async () => {

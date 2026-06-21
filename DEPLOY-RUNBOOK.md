@@ -1,6 +1,6 @@
 # Deploy Runbook — Sociedad Opita
 
-> **Last reviewed**: Polish R7 (deployment hardening). All commands assume
+> **Last reviewed**: Polish R5 (security hardening). All commands assume
 > `sst@^3.19.3`, `pnpm@9` for `api/`, `npm@10` for `web/`, AWS region `us-east-1`.
 
 ## Pre-deploy checklist
@@ -9,12 +9,12 @@
 
 - [ ] All PRs merged to `main` via squash (preserves linear history).
 - [ ] CI green on the merge commit: API typecheck + test, Web astro check + build.
-- [ ] No diff in `api/src/api.ts:89` or `api/sst.config.ts:1` (these only
+- [ ] No diff in `api/src/api.ts:98` or `api/sst.config.ts:1` (these only
       resolve once `sst dev` has generated `.sst/platform/config.d.ts` —
       they are tolerated by CI and reviewers; see `tsconfig.json` exclude).
 - [ ] No diff in `api/src/llm/`, `api/src/rag/`, `api/src/state/`,
-      `api/src/handlers/`, `api/src/context/`, `api/src/personas.ts`
-      (PR #5–#9 code, frozen).
+      `api/src/handlers/dialogue.ts` (frozen PR #5–#9 + R5 integration
+      code), `api/src/context/`, `api/src/personas.ts`.
 - [ ] No diff in `web/src/pages/{index,replica,taller,ventana,puente}.astro`
       (visual honesty is established — no styling drift).
 
@@ -41,11 +41,13 @@
 - [ ] **Concurrency**: reserved = `10` (cost cap; prevents runaway
       spend if abused / DoS). Lambda + DDB are pay-per-call. Fixed
       in Polish R7.
-- [ ] **Env vars**: `DDB_TABLE`, `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL`,
-      `CORPUS_PATH`, `STAGE`.
+- [ ] **Env vars**: `DDB_TABLE`, `DEEPSEEK_API_KEY` (SST Secret), `DEEPSEEK_BASE_URL`,
+      `CORPUS_PATH`, `STAGE`. See [Secrets](#secrets) below for the
+      `sst secret set` procedure (Polish R5).
 - [ ] **Link**: `[sessionsTable, personasTable, stateTable]`.
 - [ ] **URL**: enabled with CORS allowing `https://sociedad.opitacode.com`
-      (configured via `Router` in `sst.config.ts:90–99`).
+      (configured in `api/src/api.ts:28` with `Max-Age: 600` and
+      `Allow-Credentials: false` hardening from Polish R5).
 - [ ] **Logging**: JSON format, 1-month retention (cost-controlled).
 
 ### Frontend (static)
@@ -178,6 +180,76 @@ to be wired into `sst.config.ts` in a follow-up round using
 `aws.cloudwatch.MetricAlarm` from Pulumi). For now, configure these
 manually in the CloudWatch console — the table is the source of truth.
 
+---
+
+## Secrets
+
+Polish R5 (security hardening) migrated `DEEPSEEK_API_KEY` from
+`process.env` directly to SST's encrypted `sst.Secret`. The
+`api/src/llm/provider.ts` code is unchanged — it still reads
+`process.env.DEEPSEEK_API_KEY`; SST interpolates the secret value
+into the Lambda's environment at deploy time.
+
+### Setting the secret
+
+```bash
+# One-time, per AWS account:
+cd api
+pnpm sst secret set DeepSeekApiKey sk-...
+# (paste the DeepSeek API key when prompted)
+```
+
+SST stores the secret encrypted in `.sst/` (gitignored). For
+`prod` and any custom stage, the secret is uploaded to AWS SSM
+Parameter Store (SecureString) on the first `sst deploy`. **Do not
+commit the secret to `.env`** — `.env` is for local-dev only and
+SST will not read it for secrets in `prod`.
+
+### Local dev
+
+For local dev (`pnpm sst dev`), the same secret is read from SST's
+state file. The lambda's environment is populated with the secret
+value at deploy time. If you want to override for testing, you can
+still drop a `DEEPSEEK_API_KEY=` line into `api/.env` — the SST
+secret takes precedence in `sst dev` runs.
+
+### Rollback
+
+If the secret lookup fails (e.g., SSM throttled on cold start), the
+Lambda will boot with `DEEPSEEK_API_KEY=""` and the provider will
+fail loudly on the first dialogue request with a 4xx. Rollback =
+revert `sst.config.ts` to the previous `process.env.DEEPSEEK_API_KEY
+|| ""` pattern. No data loss.
+
+---
+
+## Deferred (Phase 2): per-persona rate limit
+
+Polish R5 WU-5 proposed a per-persona token bucket on top of the
+existing per-IP limiter in `api/src/llm/rate-limiter.ts`. This was
+**deferred** because the rate-limiter file is part of the frozen
+PR #5 contract. Phase 2 plan:
+
+- Add a second `TokenBucket` instance keyed by `persona_id` (capacity
+  100, refill 100 / 3600 s ≈ 0.0278/sec) in a NEW file
+  `api/src/llm/per-persona-rate-limiter.ts` so we don't touch
+  `rate-limiter.ts`.
+- Wire it into `api/src/handlers/dialogue.ts` between the
+  validator pass and the LLM call. Both buckets (per-IP and
+  per-persona) must pass; otherwise return `429` with
+  `Retry-After: <seconds>`.
+- The per-persona bucket prevents a single persona from absorbing
+  the entire 10/minute per-IP budget (e.g., one user asking Doña
+  Rosa 10 questions in a row).
+
+Polish R7 already caps total Lambda concurrency at 10, so the
+abuse case is bounded at the infra layer. Per-persona is a
+fairness improvement, not a security necessity.
+
+---
+
+
+
 | Alarm                                       | Threshold                | Period   | Action                                                                 |
 |---------------------------------------------|--------------------------|----------|------------------------------------------------------------------------|
 | Lambda errors (ApiFn)                       | > 1 % over 5 datapoints  | 1 min    | Page operator; check CloudWatch logs; rollback if > 5 %.                |
@@ -217,7 +289,11 @@ each alarm's `Actions` → `SNS` configuration.
 
 ## Pointers
 
-- `api/sst.config.ts` — SST v3 stack (Lambda, DDB, Router, CORS, env vars).
+- `api/sst.config.ts` — SST v3 stack (Lambda, DDB, Router, env vars, **SST Secret** for `DEEPSEEK_API_KEY` — Polish R5).
+- `api/src/api.ts` — Hono app + CORS middleware (Polish R5: `Max-Age: 600`, `Allow-Credentials: false`).
+- `api/src/handlers/dialogue.ts` — POST /v1/dialogue (integrates the Polish R5 validator).
+- `api/src/handlers/validation.ts` — Polish R5: typed input validation (whitelist, length caps, time regex, conv_id regex, control char stripping).
+- `api/src/context/builder.ts` — Polish R5: `sanitizeUserInput()` strips role markers + control chars from the query; system prompt carries an injection-defense clause.
 - `api/alarms.config.ts` — typed CloudWatch alarm manifest.
 - `DEPLOY-RUNBOOK.md` — this file.
 - `.github/workflows/ci.yml` — typecheck + test + build on every PR / push to `main`.

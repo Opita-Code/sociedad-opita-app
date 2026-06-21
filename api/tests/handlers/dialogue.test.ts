@@ -203,7 +203,7 @@ describe("POST /v1/dialogue — happy path", () => {
 });
 
 describe("POST /v1/dialogue — input validation", () => {
-  it("returns 404 for unknown persona_id", async () => {
+  it("returns 400 with validation_failed for unknown persona_id (whitelist)", async () => {
     const res = await dialogueApp.request("/v1/dialogue", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -214,13 +214,18 @@ describe("POST /v1/dialogue — input validation", () => {
       }),
     });
 
-    expect(res.status).toBe(404);
-    const body = (await res.json()) as { error: string; persona_id: string };
-    expect(body.error).toBe("persona_not_found");
-    expect(body.persona_id).toBe("inexistente");
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as {
+      error: string;
+      errors: Array<{ field: string; message: string }>;
+    };
+    expect(body.error).toBe("validation_failed");
+    const personaErr = body.errors.find((e) => e.field === "persona_id");
+    expect(personaErr).toBeDefined();
+    expect(personaErr!.message).toMatch(/whitelist|inexistente/);
   });
 
-  it("returns 400 when persona_id is missing", async () => {
+  it("returns 400 with validation_failed when persona_id is missing", async () => {
     const res = await dialogueApp.request("/v1/dialogue", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -231,9 +236,14 @@ describe("POST /v1/dialogue — input validation", () => {
     });
 
     expect(res.status).toBe(400);
-    const body = (await res.json()) as { error: string; required: string[] };
-    expect(body.error).toBe("missing_required_fields");
-    expect(body.required).toEqual(expect.arrayContaining(["persona_id", "scene", "query"]));
+    const body = (await res.json()) as {
+      error: string;
+      errors: Array<{ field: string; message: string }>;
+    };
+    expect(body.error).toBe("validation_failed");
+    expect(body.errors.map((e) => e.field)).toEqual(
+      expect.arrayContaining(["persona_id"]),
+    );
   });
 
   it("returns 400 when query is missing", async () => {

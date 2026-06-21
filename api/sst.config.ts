@@ -76,12 +76,18 @@ export default $config({
     //   Polish R7: reserved concurrency cap = 10 invocations — prevents
     //     runaway cost if abused / DoS (Lambda + DDB are pay-per-call).
     //   Polish R7: explicit log retention 1 month (default) for cost.
+    //   Polish R5: DEEPSEEK_API_KEY now sourced from an encrypted
+    //     `sst.Secret` (see DEPLOY-RUNBOOK.md for the `sst secret set`
+    //     procedure). The secret value is interpolated into the
+    //     Lambda's environment at deploy time; `process.env` reads
+    //     inside the handler (api/src/llm/provider.ts) see it normally.
+    const DEEPSEEK_API_KEY_SECRET = new sst.Secret("DeepSeekApiKey");
     const apiFn = new sst.aws.Function("ApiFn", {
       url: true,
       handler: "src/api.handler",
       link: [sessionsTable, personasTable, stateTable],
       environment: {
-        DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || "",
+        DEEPSEEK_API_KEY: DEEPSEEK_API_KEY_SECRET.value,
         DEEPSEEK_BASE_URL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1",
         DDB_TABLE: stateTable.name,
         CORPUS_PATH:
