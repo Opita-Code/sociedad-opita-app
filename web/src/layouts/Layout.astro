@@ -1,5 +1,5 @@
 ---
-import '../styles/global.css';
+import "../styles/global.css";
 
 interface Props {
   title: string;
@@ -9,12 +9,12 @@ interface Props {
 
 const {
   title,
-  description = 'Sociedad Opita — el primer monumento digital vivo de una comunidad colombiana. Tello, Huila.',
-  ogType = 'website',
+  description = "Sociedad Opita — el primer monumento digital vivo de una comunidad colombiana. Tello, Huila.",
+  ogType = "website",
 } = Astro.props;
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es-CO">
   <head>
     <meta charset="UTF-8" />
@@ -25,25 +25,27 @@ const {
     <meta name="theme-color" content="#6b3e2e" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={new URL('/og-image.jpg', Astro.url).href} />
+    <meta property="og:image" content={new URL("/og-image.jpg", Astro.url).href} />
     <meta property="og:url" content={Astro.url.href} />
     <meta property="og:type" content={ogType} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={new URL('/og-image.jpg', Astro.url).href} />
+    <meta name="twitter:image" content={new URL("/og-image.jpg", Astro.url).href} />
     <title>{title}</title>
   </head>
   <body class="min-h-screen bg-opita-arena text-opita-cafe">
     <a href="#main-content" class="skip-to-content">Saltar al contenido principal</a>
-    {/*
+    {
+      /*
       The slot is wrapped in a generic block element instead of <main> so
       that the page-level <main> in each route (which is frozen under
       Polish R8) does not become nested. role="main" + aria-label keep
       AT semantic equivalence for the skip target. tabindex="-1" makes
       the element programmatically focusable so the skip link can move
       keyboard focus past the header.
-    */}
+    */
+    }
     <div id="main-content" role="main" aria-label="Contenido principal" tabindex="-1">
       <slot />
     </div>
