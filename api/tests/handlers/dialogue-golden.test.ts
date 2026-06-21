@@ -26,16 +26,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const { ocaisStreamMock } = vi.hoisted(() => ({ ocaisStreamMock: vi.fn() }));
 vi.mock("../../src/llm/provider", () => ({ ocaisStream: ocaisStreamMock }));
 
-const { embedQueryMock, retrieveMock, loadCorpusMock } = vi.hoisted(() => ({
+const { embedQueryMock, retrieveMock, loadCorpusFromBufferMock } = vi.hoisted(() => ({
   embedQueryMock: vi.fn(),
   retrieveMock: vi.fn(),
-  loadCorpusMock: vi.fn(),
+  loadCorpusFromBufferMock: vi.fn(),
 }));
 vi.mock("../../src/rag/retrieve", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../src/rag/retrieve")>();
   return {
     ...actual,
-    loadCorpus: loadCorpusMock,
+    loadCorpusFromBuffer: loadCorpusFromBufferMock,
     retrieve: retrieveMock,
   };
 });
@@ -75,11 +75,11 @@ beforeEach(async () => {
   ocaisStreamMock.mockReset();
   embedQueryMock.mockReset();
   retrieveMock.mockReset();
-  loadCorpusMock.mockReset();
+  loadCorpusFromBufferMock.mockReset();
   getPersonaStateMock.mockReset();
   appendTurnMock.mockReset();
 
-  loadCorpusMock.mockResolvedValue([
+  loadCorpusFromBufferMock.mockResolvedValue([
     doc(
       "dona-rosa-portrait",
       "Doña Rosa Elvira, tendera fiadera del pueblo.",

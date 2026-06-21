@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { OCAISProviderError } from "@opita/ocais";
+import { LLM_CONFIG, LLM_MODEL, LLM_PROVIDERS } from "../../src/llm/config";
 
 // Mock @opita/ocais BEFORE importing the module under test.
 // vi.mock is hoisted, so vi.mocked() must be used at runtime to access the mock.
@@ -29,8 +30,9 @@ async function collect(
 describe("ocaisStream", () => {
   beforeEach(() => {
     mockStreamText.mockReset();
-    process.env.DEEPSEEK_API_KEY = "test-key";
-    process.env.DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1";
+    // Use the active provider's env-var name from config so the test
+    // follows the same wiring as production code.
+    process.env[LLM_CONFIG.apiKeyEnvVar] = "test-key";
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -53,7 +55,7 @@ describe("ocaisStream", () => {
     expect(doneChunks[0]!.cost).toBeGreaterThan(0);
   });
 
-  it("defaults model to deepseek-chat when not provided", async () => {
+  it(`defaults model to the active provider's model (${LLM_MODEL.name})`, async () => {
     mockStreamText.mockReturnValueOnce(
       (async function* () {
         yield { type: "text", text: "x" } as never;
@@ -64,7 +66,7 @@ describe("ocaisStream", () => {
 
     expect(mockStreamText).toHaveBeenCalledTimes(1);
     const call = mockStreamText.mock.calls[0]![0];
-    expect(call.model).toBe("deepseek-chat");
+    expect(call.model).toBe(LLM_MODEL.name);
   });
 
   it("uses provided model when given", async () => {
@@ -74,10 +76,12 @@ describe("ocaisStream", () => {
       })() as never
     );
 
-    await collect(ocaisStream({ system: "s", user: "u", model: "deepseek-reasoner" }));
+    // Use a model from the catalog so the cost lookup finds a rate.
+    const explicitModel = LLM_PROVIDERS.deepseek!.defaultModel;
+    await collect(ocaisStream({ system: "s", user: "u", model: explicitModel }));
 
     const call = mockStreamText.mock.calls[0]![0];
-    expect(call.model).toBe("deepseek-reasoner");
+    expect(call.model).toBe(explicitModel);
   });
 
   it("retries 3x on 5xx with exponential backoff (1s, 2s, 4s)", async () => {
@@ -164,13 +168,13 @@ describe("ocaisStream", () => {
   it("logs cost on done chunk proportional to total streamed text length", async () => {
     mockStreamText.mockReturnValueOnce(
       (async function* () {
-        // 40 chars → 10 tokens → 10/1_000_000 * 0.14 = 1.4e-6 USD
+        // 40 chars → 10 tokens → 10/1_000_000 * LLM_MODEL.outputCostPer1MUsd
         yield { type: "text", text: "a".repeat(40) } as never;
       })() as never
     );
 
     const chunks = await collect(ocaisStream({ system: "s", user: "u" }));
     const done = chunks.find((c) => c.type === "done") as { type: "done"; cost: number };
-    expect(done.cost).toBeCloseTo((10 / 1_000_000) * 0.14, 10);
+    expect(done.cost).toBeCloseTo((10 / 1_000_000) * LLM_MODEL.outputCostPer1MUsd, 10);
   });
 });

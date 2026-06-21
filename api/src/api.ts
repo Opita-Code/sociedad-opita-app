@@ -30,6 +30,7 @@ import dialogueApp from "./handlers/dialogue";
 import personasApp from "./handlers/personas";
 import { observabilityMiddleware } from "./observability/middleware";
 import { estimateCost } from "./llm/cost-tracker";
+import { LLM_CONFIG, LLM_MODEL, getLlmApiKey, getDefaultTemperature } from "./llm/config";
 
 const app = new Hono();
 
@@ -114,14 +115,12 @@ app.post("/v1/simulate", async (c) => {
   try {
     const stream = streamText({
       provider: openai({
-        // Polish R9 (HIGH #1 fix): defensive `?? ""` so the strict
-        // typecheck on `apiKey: string` is satisfied even when the env
-        // var is unset. The provider wrapper in `llm/provider.ts` does
-        // the same — the legacy `/v1/simulate` path was the last holdout.
-        apiKey: process.env.DEEPSEEK_API_KEY ?? "",
-        baseURL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1",
+        // The legacy /v1/simulate endpoint — also driven by LLM_CONFIG
+        // so it follows the active provider automatically.
+        apiKey: getLlmApiKey(),
+        baseURL: LLM_CONFIG.baseURL,
       }),
-      model: body.model || "deepseek-chat",
+      model: body.model || LLM_CONFIG.defaultModel,
       system: systemPrompt,
       messages: [
         {
@@ -140,7 +139,7 @@ app.post("/v1/simulate", async (c) => {
     return c.json({
       text: fullText,
       metadata: {
-        cost_usd: estimateCost(fullText, body.model || "deepseek-chat"),
+        cost_usd: estimateCost(fullText, body.model || LLM_MODEL.name),
         latency_ms,
         // TODO(opita-r10-tokens-in): track tokens_in from OCAIS provider.
         // Polish R9: switched from the previous "TODO: track desde ocais"
@@ -149,8 +148,8 @@ app.post("/v1/simulate", async (c) => {
         // grep for and resolve.
         tokens_in: 0,
         tokens_out: 0,
-        model: body.model || "deepseek-chat",
-        temperature: body.temperature || 1.3,
+        model: body.model || LLM_MODEL.name,
+        temperature: body.temperature || getDefaultTemperature(body.model || LLM_MODEL.name),
       },
     });
   } catch (e) {

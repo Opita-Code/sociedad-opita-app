@@ -34,17 +34,17 @@ vi.mock("../../src/llm/provider", () => ({
   ocaisStream: ocaisStreamMock,
 }));
 
-const { embedQueryMock, retrieveMock, loadCorpusMock } = vi.hoisted(() => ({
+const { embedQueryMock, retrieveMock, loadCorpusFromBufferMock } = vi.hoisted(() => ({
   embedQueryMock: vi.fn(),
   retrieveMock: vi.fn(),
-  loadCorpusMock: vi.fn(),
+  loadCorpusFromBufferMock: vi.fn(),
 }));
 
 vi.mock("../../src/rag/retrieve", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../src/rag/retrieve")>();
   return {
     ...actual,
-    loadCorpus: loadCorpusMock,
+    loadCorpusFromBuffer: loadCorpusFromBufferMock,
     retrieve: retrieveMock,
   };
 });
@@ -100,12 +100,12 @@ beforeEach(async () => {
   ocaisStreamMock.mockReset();
   embedQueryMock.mockReset();
   retrieveMock.mockReset();
-  loadCorpusMock.mockReset();
+  loadCorpusFromBufferMock.mockReset();
   getPersonaStateMock.mockReset();
   appendTurnMock.mockReset();
 
   // Default happy-path mocks
-  loadCorpusMock.mockResolvedValue([VALID_DOC]);
+  loadCorpusFromBufferMock.mockResolvedValue([VALID_DOC]);
   embedQueryMock.mockResolvedValue(new Float32Array([0.1, 0.2, 0.3]));
   retrieveMock.mockReturnValue([{ doc: VALID_DOC, score: 0.91 }]);
   getPersonaStateMock.mockResolvedValue({
@@ -302,7 +302,7 @@ describe("POST /v1/dialogue — RAG pipeline", () => {
     });
     await r2.text();
 
-    expect(loadCorpusMock).toHaveBeenCalledTimes(1);
+    expect(loadCorpusFromBufferMock).toHaveBeenCalledTimes(1);
   });
 
   it("embeds the user query exactly once per request", async () => {
@@ -474,7 +474,7 @@ describe("POST /v1/dialogue — conversation persistence (best-effort)", () => {
 
 describe("POST /v1/dialogue — internal error handling", () => {
   it("returns 500 with error: 'internal_error' when corpus load fails", async () => {
-    loadCorpusMock.mockRejectedValueOnce(new Error("disk fail"));
+    loadCorpusFromBufferMock.mockRejectedValueOnce(new Error("disk fail"));
 
     const res = await dialogueApp.request("/v1/dialogue", {
       method: "POST",
