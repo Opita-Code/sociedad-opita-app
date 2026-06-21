@@ -40,7 +40,30 @@
  *     shapes (e.g., "system: ..." appearing on a new line in a long
  *     multi-paragraph question).
  *
+ * Polish R9 (BUG #1 fix): the ReadableStream's start() uses try/finally
+ * to call controller.close() on every exit path of the for-await loop
+ * — the "done" chunk path, an unknown chunk type that the loop skips,
+ * OR a mid-stream throw. Previously the controller was only closed on
+ * the "done" branch, which meant an upstream chunk shape change (or a
+ * thrown error before close) would leave the SSE stream open and the
+ * client would hang waiting for a terminator.
+ *
+ * Polish R9 (HIGH #2 integration): the handler now also
+ *   - rate-limits per-IP via TokenBucket.tryConsume() (10 req/min) at
+ *     the very top, returning 429 with a Spanish retry hint when
+ *     the bucket is empty. See `getDialogueRateLimiter()` in
+ *     `llm/rate-limiter.ts`.
+ *   - records each successful invocation through `cost.recordInvocation()`
+ *     in `observability/cost.ts`, with tokens_out estimated from
+ *     the full text length (4 chars per token). This produces the
+ *     `cost.recorded` structured log line and the `cost_usd` EMF
+ *     histogram — the same surfaces that the /v1/simulate handler
+ *     writes inline. Cost is recorded only on the "done" path with
+ *     tokens_out > 0; aborted or empty streams do not pollute the
+ *     dashboard.
+ *
  * Error policy:
+ *   - 429 rate_limited (per-IP token bucket exhausted; see HIGH #2)
  *   - 400 invalid_json (malformed body)
  *   - 400 validation_failed (per-field errors from validation.ts)
  *   - 400 missing_required_fields (kept for backward compat with PR #9)
@@ -59,6 +82,8 @@ import { TELLO_PERSONAS } from "../personas";
 import { getPersonaState } from "../state/persona-state";
 import { appendTurn } from "../state/conversation";
 import { validateDialogueRequest } from "./validation";
+import { cost } from "../observability/cost";
+import { getDialogueRateLimiter } from "../llm/rate-limiter";
 
 const app = new Hono();
 
@@ -80,6 +105,23 @@ async function getOrLoadCorpus(): Promise<Corpus> {
 }
 
 app.post("/v1/dialogue", async (c: Context) => {
+  // 0. Rate limit (Polish R9, HIGH #2). Per-IP token bucket: 10 req/min
+  // default. This runs BEFORE JSON parsing so request-flooding bots
+  // sending malformed bodies also get throttled. The bucket is shared
+  // across all dialogue invocations on the same warm Lambda instance;
+  // cold start resets it (acceptable — soft limiter, not a billing gate).
+  const ip = c.req.header("x-forwarded-for") || "unknown";
+  if (!getDialogueRateLimiter().tryConsume(ip)) {
+    return c.json(
+      {
+        error: "rate_limited",
+        message: "Has superado el limite de 10 dialogos por minuto. Vuelve a intentarlo en unos segundos.",
+        retry_after_s: 6,
+      },
+      429,
+    );
+  }
+
   // 1. Parse JSON body (raw — validation runs in step 1b).
   let body: unknown;
   try {
@@ -118,8 +160,15 @@ app.post("/v1/dialogue", async (c: Context) => {
       weather: scene.weather,
     };
 
-    // 5. Persona state (best-effort; informational in Phase 1)
-    const personaState = await getPersonaState(persona_id).catch(() => null);
+    // 5. Persona state (best-effort; informational in Phase 1).
+    // TODO(opita-r10-persona-state): thread personaState into
+    // buildContext() so Big Five / network position / recent events
+    // reach the LLM. The fetch is already best-effort and cached
+    // upstream, so this is a wiring change, not a perf change.
+    // (Polish R9: removed the `void personaState;` smell flagged in
+    // code-review-r1.md L3 — the variable is unused here, so we no
+    // longer need the `void` to silence tsc.)
+    await getPersonaState(persona_id).catch(() => null);
 
     // 6. Build context (also sanitizes the query — see builder.ts)
     const { system, user } = buildContext(persona, validatedScene, topK, query);
@@ -133,6 +182,25 @@ app.post("/v1/dialogue", async (c: Context) => {
       async start(controller) {
         const encoder = new TextEncoder();
         let fullText = "";
+        // Polish R9 (BUG #1): track whether the stream has been closed so
+        // the finally block is idempotent. The for-await loop can exit
+        // via (a) the "done" chunk path, (b) an unknown chunk type that
+        // the loop silently skips, or (c) a mid-stream throw. In all
+        // three cases we MUST call controller.close() — otherwise the
+        // SSE stream stays open and the client hangs forever. The
+        // try/finally below guarantees close on every exit path.
+        let closed = false;
+        const safeClose = () => {
+          if (closed) return;
+          closed = true;
+          try {
+            controller.close();
+          } catch {
+            // Idempotent — ReadableStreamDefaultController.close() is a
+            // no-op on an already-closed controller, but be defensive
+            // against any internal state mismatch.
+          }
+        };
         try {
           for await (const chunk of ocaisStream({ system, user })) {
             if (chunk.type === "text") {
@@ -149,6 +217,25 @@ app.post("/v1/dialogue", async (c: Context) => {
                   })}\n\n`,
                 ),
               );
+
+              // Polish R9 (HIGH #2): record the cost via the observability
+              // client. We estimate tokens_out from the full text length
+              // (4 chars per token — the same heuristic DeepSeek's pricing
+              // docs use for English; close enough for Spanish colonial
+              // dialect and consistently slightly over-counts, which is
+              // the safe direction). tokens_in is 0 today because the
+              // OCAIS provider does not surface the upstream usage
+              // envelope; the existing estimateCost() handles that case
+              // correctly (it only counts tokens_out).
+              const tokensOut = Math.ceil(fullText.length / 4);
+              if (tokensOut > 0) {
+                cost.recordInvocation({
+                  model: "deepseek-chat",
+                  tokens_out: tokensOut,
+                  conv_id,
+                  persona_id,
+                });
+              }
 
               // 8. Persist conversation turns (best-effort).
               if (conv_id) {
@@ -168,9 +255,9 @@ app.post("/v1/dialogue", async (c: Context) => {
                   content: query,
                 }).catch(() => undefined);
               }
-
-              controller.close();
             }
+            // Unknown chunk types are intentionally ignored — the
+            // finally block will close the controller regardless.
           }
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
@@ -179,12 +266,12 @@ app.post("/v1/dialogue", async (c: Context) => {
               `data: ${JSON.stringify({ error: "stream_error", message })}\n\n`,
             ),
           );
-          controller.close();
+        } finally {
+          // Close on every exit path: success (done chunk), unknown
+          // chunk type fall-through, OR mid-stream throw. safeClose is
+          // idempotent so multiple exit paths are safe.
+          safeClose();
         }
-
-        // personaState is loaded for future use; mark it referenced so
-        // tsc does not complain while we leave the hook in place for Phase 2.
-        void personaState;
       },
     });
 

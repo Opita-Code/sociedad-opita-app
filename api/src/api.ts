@@ -6,13 +6,20 @@
  * - GET  /v1/cities/:id/personas     -> personas de una ciudad
  * - GET  /v1/personas/:city_id       -> alias slimmer de /v1/cities/:id/personas (PR #9)
  * - POST /v1/simulate                -> genera dialogo LLM con @opita/ocais (kept for backward compat)
- * - POST /v1/dialogue                -> SSE stream con RAG + persona + estado (PR #9)
+ * - POST /v1/dialogue                -> SSE stream con RAG + persona + estado (PR #9) + rate-limit + cost-tracking (R9)
  * - GET  /v1/stream                  -> SSE stream del pueblo (S2)
  * - WS   /v1/chat                    -> WebSocket chat con personajes (S2)
  *
  * Stack: Hono (4KB router) + @opita/ocais (streaming) + PR #5 (provider with
  * retry + cost + rate-limit) + PR #6 (RAG retrieve + corpus loader) + PR #7
  * (state store: persona-state, conversation) + PR #9 (dialogue composition).
+ *
+ * Polish R9 (HIGH #1 fix): `DEEPSEEK_API_KEY` now reads through a `?? ""`
+ * fallback so the strict typecheck is satisfied. The `estimateCost()`
+ * import on line 25 is also a R9 change (M1) — it used to be a local
+ * copy in this file; it is now the canonical implementation from
+ * `llm/cost-tracker.ts`, shared with `observability/cost.ts` and the
+ * dialogue handler.
  */
 
 import { Hono } from "hono";
@@ -22,6 +29,7 @@ import { CIUDADES, TELLO_PERSONAS, type Persona } from "./personas";
 import dialogueApp from "./handlers/dialogue";
 import personasApp from "./handlers/personas";
 import { observabilityMiddleware } from "./observability/middleware";
+import { estimateCost } from "./llm/cost-tracker";
 
 const app = new Hono();
 
@@ -102,7 +110,11 @@ app.post("/v1/simulate", async (c) => {
   try {
     const stream = streamText({
       provider: openai({
-        apiKey: process.env.DEEPSEEK_API_KEY,
+        // Polish R9 (HIGH #1 fix): defensive `?? ""` so the strict
+        // typecheck on `apiKey: string` is satisfied even when the env
+        // var is unset. The provider wrapper in `llm/provider.ts` does
+        // the same — the legacy `/v1/simulate` path was the last holdout.
+        apiKey: process.env.DEEPSEEK_API_KEY ?? "",
         baseURL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1",
       }),
       model: body.model || "deepseek-chat",
@@ -126,7 +138,12 @@ app.post("/v1/simulate", async (c) => {
       metadata: {
         cost_usd: estimateCost(fullText, body.model || "deepseek-chat"),
         latency_ms,
-        tokens_in: 0, // TODO: track desde ocais
+        // TODO(opita-r10-tokens-in): track tokens_in from OCAIS provider.
+        // Polish R9: switched from the previous "TODO: track desde ocais"
+        // form to the "TODO(opita-XXX)" convention adopted in
+        // alarms.config.ts — gives the operator a real ticket key to
+        // grep for and resolve.
+        tokens_in: 0,
         tokens_out: 0,
         model: body.model || "deepseek-chat",
         temperature: body.temperature || 1.3,
@@ -144,7 +161,9 @@ app.post("/v1/simulate", async (c) => {
 });
 
 // Constructor de prompt — placeholder de las 7 capas sociolinguisticas + 13 anti-slop
-// TODO S2: portar prompt_builder.py completo a TypeScript
+// TODO(opita-s2-prompt-builder): portar prompt_builder.py completo a TypeScript.
+// (Polish R9: switched from the previous "TODO S2" form to the
+// "TODO(opita-XXX)" convention adopted in alarms.config.ts.)
 //
 // PR #9: el handler /v1/dialogue usa un prompt builder más rico en
 // api/src/context/builder.ts (Big Five + Lomnitz + Dunbar + RAG top-k).
@@ -160,13 +179,6 @@ Miedos: ${persona.fears.join("; ")}.
 Responde SIEMPRE en espanol colombiano rural del Huila, usando tus muletillas.
 NO uses registros neutro, argentino, mexicano, chileno ni espanol peninsular.
 NO inventes datos sobre tu biografia — lo que sabes esta aqui.`;
-}
-
-function estimateCost(text: string, model: string): number {
-  // DeepSeek Chat: ~$0.14 per 1M output tokens. Aprox 4 chars per token.
-  const outputTokens = Math.ceil(text.length / 4);
-  const costPer1M = model.includes("reasoner") ? 2.19 : 0.14;
-  return (outputTokens / 1_000_000) * costPer1M;
 }
 
 // PR #9: monta el handler /v1/dialogue (SSE con OCAIS + RAG + estado)

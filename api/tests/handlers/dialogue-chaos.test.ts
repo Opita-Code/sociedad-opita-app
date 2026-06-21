@@ -141,12 +141,26 @@ const QUERIES = [
 
 const PERSONAS = TELLO_PERSONAS.map((p) => p.persona_id);
 
-async function postDialogue(body: object): Promise<Response> {
+async function postDialogue(body: object, ip: string = "203.0.113.1"): Promise<Response> {
+  // Polish R9: each call gets a unique x-forwarded-for IP so the
+  // per-IP rate limiter (HIGH #2) doesn't reject the chaos loops
+  // after 10 hits. In production, every visitor comes from a
+  // distinct source IP; this matches that reality.
   return dialogueApp.request("/v1/dialogue", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-forwarded-for": ip,
+    },
     body: JSON.stringify(body),
   });
+}
+
+let chaosIpCounter = 0;
+function nextChaosIp(): string {
+  chaosIpCounter += 1;
+  // 198.51.100.0/24 is documentation-reserved (RFC 5737) — safe for tests.
+  return `198.51.100.${(chaosIpCounter % 250) + 1}`;
 }
 
 function mockHappyStream(text: string = "ok") {
@@ -170,7 +184,7 @@ describe("chaos — random persona/scene/query loops", () => {
       const scene = pick(rng, SCENES);
       const query = pick(rng, QUERIES);
 
-      const res = await postDialogue({ persona_id, scene, query });
+      const res = await postDialogue({ persona_id, scene, query }, nextChaosIp());
       if (res.status === 200) {
         pass++;
         await res.text();
@@ -198,7 +212,7 @@ describe("chaos — random persona/scene/query loops", () => {
         persona_id,
         scene: { time: "06:00", place: "pueblo" },
         query: "Hola",
-      });
+      }, nextChaosIp());
       results[persona_id] = res.status;
       await res.text();
     }
@@ -214,7 +228,7 @@ describe("chaos — random persona/scene/query loops", () => {
         persona_id: "dona_rosa_tendera",
         scene,
         query: "Hola",
-      });
+      }, nextChaosIp());
       expect(res.status, `scene ${scene.time}/${scene.place}`).toBe(200);
       await res.text();
     }
@@ -227,7 +241,7 @@ describe("chaos — random persona/scene/query loops", () => {
         persona_id: "dona_rosa_tendera",
         scene: { time: "06:00", place: "pueblo" },
         query,
-      });
+      }, nextChaosIp());
       expect(res.status, `query "${query}"`).toBe(200);
       await res.text();
     }
@@ -282,7 +296,7 @@ describe("chaos — concurrent requests", () => {
         persona_id,
         scene: { time: "06:00", place: "pueblo" },
         query: "Pregunta concurrente",
-      }),
+      }, nextChaosIp()),
     );
 
     const responses = await Promise.all(requests);
@@ -309,7 +323,7 @@ describe("chaos — concurrent requests", () => {
         persona_id: "dona_rosa_tendera",
         scene: { time: "06:00", place: "pueblo" },
         query: `q-${i}`,
-      }),
+      }, nextChaosIp()),
     );
     const responses = await Promise.all(requests);
     for (const r of responses) {
@@ -349,17 +363,12 @@ describe("chaos — stream interruption mid-flight", () => {
     expect(text).toContain('"message":"stream aborted"');
   });
 
-  // KNOWN BUG — temporarily skipped until api/src/handlers/dialogue.ts is fixed.
-  //
-  // Symptom: when OCAIS yields a non-"text"/non-"done" chunk and then
-  // returns, the handler's for-await loop falls through without calling
-  // controller.close(). The SSE stream stays open and the client hangs.
-  //
-  // Fix: add controller.close() at the end of the for-await loop (inside
-  // the ReadableStream's start()). The fix lives in a frozen zone
-  // (api/src/handlers/dialogue.ts), so it will land in a future polish
-  // round. When the fix lands, un-skip this test.
-  it.skip("graceful error chunk when OCAIS yields an unknown chunk type", { timeout: 3000 }, async () => {
+  // Polish R9 (BUG #1 fix): the handler's for-await loop now uses a
+  // try/finally to call controller.close() on every exit path
+  // (success, error, or yield of an unknown chunk). Previously, when
+  // OCAIS yielded a non-"text"/non-"done" chunk and then returned, the
+  // SSE stream stayed open and the client hung.
+  it("controller.close() called when OCAIS yields an unknown chunk type", { timeout: 3000 }, async () => {
     ocaisStreamMock.mockImplementationOnce(async function* () {
       yield { type: "text", text: "ok " };
       yield { type: "weird_future_type" as "text", payload: "???" } as never;
@@ -392,6 +401,58 @@ describe("chaos — stream interruption mid-flight", () => {
 
     const text = await Promise.race([readPromise, timeoutPromise]);
     expect(text).toContain('"text":"ok "');
+  });
+
+  it("controller.close() called even on partial stream (text-only, no done chunk)", { timeout: 3000 }, async () => {
+    // Stream yields one text chunk and ends without a "done" envelope.
+    // The handler must still close the controller — otherwise the client hangs.
+    ocaisStreamMock.mockImplementationOnce(async function* () {
+      yield { type: "text", text: "partial answer" };
+    });
+
+    const res = await dialogueApp.request("/v1/dialogue", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        persona_id: "dona_rosa_tendera",
+        scene: { time: "06:00", place: "pueblo" },
+        query: "Hola",
+      }),
+    });
+
+    expect(res.status).toBe(200);
+
+    const readPromise = res.text();
+    const timeoutPromise = new Promise<string>((_, reject) =>
+      setTimeout(() => reject(new Error("STREAM HUNG on partial text-only stream")), 1000),
+    );
+    const text = await Promise.race([readPromise, timeoutPromise]);
+    expect(text).toContain('"text":"partial answer"');
+  });
+
+  it("controller.close() called after done chunk is yielded (normal happy path)", { timeout: 3000 }, async () => {
+    // The happy path: text chunk + done chunk. The controller should be
+    // closed after the done envelope is enqueued (and try/finally must
+    // not enqueue a second close or error on the already-closed stream).
+    ocaisStreamMock.mockImplementationOnce(async function* () {
+      yield { type: "text", text: "buenos dias" };
+      yield { type: "done", cost: 0.0001 };
+    });
+
+    const res = await dialogueApp.request("/v1/dialogue", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        persona_id: "dona_rosa_tendera",
+        scene: { time: "06:00", place: "pueblo" },
+        query: "Hola",
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    expect(text).toContain('"text":"buenos dias"');
+    expect(text).toContain('"cost":');
   });
 
   it("graceful degradation when getPersonaState throws on every request", async () => {
