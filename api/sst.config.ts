@@ -95,7 +95,32 @@ export default $config({
     //     consumer file needs editing.
     const LLM_API_KEY_SECRET = new sst.Secret("LlmApiKey");
     const apiFn = new sst.aws.Function("ApiFn", {
-      url: true,
+      url: {
+        // CORS hardening: explicitly allow only the production origin.
+        // The default Lambda URL CORS sets allowOrigins=["*"] which
+        // collides with any Access-Control-Allow-Origin header the
+        // Hono middleware sets, producing two values on the response
+        // and breaking browser CORS. We let the Function URL set the
+        // header so the response has exactly one value.
+        //
+        // Note: AWS Lambda Function URL rejects "OPTIONS" in
+        // allowMethods (member length must be ≤6 chars), but it
+        // handles preflight OPTIONS automatically — the browser sends
+        // OPTIONS, Function URL returns 200 with the CORS headers,
+        // and the request never reaches the Lambda. So we only list
+        // the real methods.
+        cors: {
+          allowOrigins: [
+            "https://sociedad.opitacode.com",
+            "https://www.sociedad.opitacode.com",
+          ],
+          allowMethods: ["GET", "POST"],
+          allowHeaders: ["Content-Type"],
+          allowCredentials: false,
+          exposeHeaders: [],
+          maxAge: "10 minutes",
+        },
+      },
       handler: "src/api.handler",
       link: [sessionsTable, personasTable, stateTable],
       environment: {

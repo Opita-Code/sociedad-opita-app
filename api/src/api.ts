@@ -34,27 +34,13 @@ import { LLM_CONFIG, LLM_MODEL, getLlmApiKey, getDefaultTemperature } from "./ll
 
 const app = new Hono();
 
-// CORS para el frontend en sociedad.opitacode.com
-// Polish R5 (security hardening):
-//   - Allow-Credentials: false — the API is anonymous; no cookies, no
-//     Authorization header is read. Removing credentialed CORS closes off
-//     a CSRF-via-credentials surface that some browsers expose.
-//   - Max-Age: 600 — preflight responses can be cached for 10 minutes,
-//     shaving one round-trip per dialogue request without risking
-//     stale-policy windows beyond a deploy.
-app.use("*", async (c, next) => {
-  c.header("Access-Control-Allow-Origin", "https://sociedad.opitacode.com");
-  c.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  c.header("Access-Control-Allow-Headers", "Content-Type");
-  c.header("Access-Control-Allow-Credentials", "false");
-  c.header("Access-Control-Max-Age", "600");
-  if (c.req.method === "OPTIONS") return c.body(null, 204);
-  await next();
-  // Polish R11: explicit return so `noImplicitReturns` is satisfied —
-  // the OPTIONS branch above returns Response, this branch falls
-  // through to `undefined` and strict mode wants it spelled out.
-  return;
-});
+// CORS is configured at the Function URL level (sst.config.ts) so the
+// response has exactly one Access-Control-Allow-Origin header. The
+// Lambda URL's default CORS sets allowOrigins=["*"] which would
+// collide with any header we set here. CloudFront Router already
+// terminates OPTIONS preflights, so we don't need an OPTIONS handler
+// inside the app — Function URL handles preflight before the request
+// reaches us.
 
 // Polish R6 (observability): structured logger + CloudWatch EMF metrics.
 // Runs AFTER CORS so OPTIONS preflights return 204 without polluting
