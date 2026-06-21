@@ -22,10 +22,31 @@ export const MAX_CONV_ID_LENGTH = 64;
 export const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 export const CONV_ID_REGEX = /^[a-zA-Z0-9_-]{1,64}$/;
 
-// C0 control chars (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F) + DEL (0x7F).
-// We keep \n (0x0A), \t (0x09), \r (0x0D) is intentionally stripped so
-// logs and prompts don't carry Windows line endings into the LLM context.
-export const CONTROL_CHARS_REGEX = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
+// Polish R9 (BUG #2 fix): control-chars regex now matches the comment.
+// Strips all C0 control characters EXCEPT the two we intentionally
+// preserve (\n / \t) — those are needed for natural multi-line
+// questions in Spanish:
+//   - \t (0x09) — tab characters in pasted text
+//   - \n (0x0A) — Unix line breaks
+// \r (0x0D) is now STRIPPED so Windows line endings (\r\n) normalize
+// to \n before they reach the LLM context. (Previously the regex
+// preserved \r, contradicting this comment.)
+// Everything else in 0x00-0x1F is stripped:
+//   0x00-0x08 — NUL, SOH..BS (control, no display)
+//   0x0B      — vertical tab (rare, but unsafe to send to the LLM)
+//   0x0C      — form feed (page break, no value in a question)
+//   0x0D      — carriage return (Windows line-ending half; strip so
+//               \r\n input normalizes to \n)
+//   0x0E-0x1F — SO..US (legacy C0 controls, all unsafe)
+//   0x7F      — DEL (the only C1 control that overlaps the printable
+//                ASCII range; always strip)
+//
+// Note: the preserved exceptions are 0x09 (\t) and 0x0A (\n). The
+// character class below writes them as 0x00-0x08 + 0x0B-0x1F + 0x7F,
+// which skips 0x09 and 0x0A without naming them — same result, less
+// repetition.
+export const CONTROL_CHARS_REGEX =
+  /[\x00-\x08\x0B-\x1F\x7F]/g;
 
 export interface ValidationError {
   field: string;

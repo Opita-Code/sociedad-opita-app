@@ -12,10 +12,45 @@
  *   - capacity:           max tokens in the bucket (default 10)
  *   - refillRatePerSec:   tokens added per second (default 10/60 ≈ 0.1667 → 10/min)
  *   - On tryConsume(ip):  lazy refill since lastRefill, then decrement if tokens >= 1.
+ *
+ * Polish R9 (HIGH #2): a module-scope `dialogueRateLimiter` singleton
+ * is now exported via `getDialogueRateLimiter()`. The dialogue handler
+ * calls tryConsume() at the top of POST /v1/dialogue to cap a single
+ * visitor at 10 requests/minute before any LLM work happens. Lazy
+ * construction keeps cold-start cost identical for tests that never
+ * touch the rate-limit surface.
  */
 export interface TokenBucketConfig {
   capacity: number;
   refillRatePerSec: number;
+}
+
+// Default per-IP cap. 10 req/min is a soft cap: one visitor can do a
+// short conversation burst but cannot drain the DeepSeek quota. Tuned
+// to be loose enough for the chaos test (5-10 concurrent personas from
+// one IP) and tight enough to blunt a script kiddie.
+const DIALOGUE_DEFAULT_CAPACITY = 10;
+const DIALOGUE_DEFAULT_REFILL_PER_SEC = 10 / 60; // 1 token every 6s
+
+let dialogueRateLimiterSingleton: TokenBucket | null = null;
+
+/**
+ * Return the module-scope dialogue rate limiter. Lazy so test
+ * suites that don't care about rate limits don't pay for it. The
+ * singleton lives in module scope, so multiple handlers sharing it
+ * (e.g., /v1/simulate and /v1/dialogue) see the same bucket map —
+ * which is the right behavior for a per-IP visitor cap.
+ */
+export function getDialogueRateLimiter(): TokenBucket {
+  if (!dialogueRateLimiterSingleton) {
+    const cap = Number(process.env.RATE_LIMIT_CAPACITY) || DIALOGUE_DEFAULT_CAPACITY;
+    const refill = Number(process.env.RATE_LIMIT_REFILL_PER_SEC) || DIALOGUE_DEFAULT_REFILL_PER_SEC;
+    dialogueRateLimiterSingleton = new TokenBucket({
+      capacity: cap,
+      refillRatePerSec: refill,
+    });
+  }
+  return dialogueRateLimiterSingleton;
 }
 
 interface BucketState {

@@ -313,21 +313,14 @@ describe("sanitizeUserInput — opita unicode + control-char defenses", () => {
     expect(sanitizeUserInput("Mañ\x00ana")).toBe("Mañana");
   });
 
-  it("strips C0 controls except \\n, \\t, and \\r (the three preserved)", () => {
-    // The regex `[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]` strips 0x00-0x08,
-    // 0x0B, 0x0C, 0x0E-0x1F, and 0x7F (DEL). It KEEPS \t (0x09),
-    // \n (0x0A), and \r (0x0D).
-    //
-    // KNOWN GAP (worth a future polish round):
-    //   The control-chars regex was originally documented to strip
-    //   \r (0x0D) so Windows line endings don't reach the LLM, but
-    //   the current regex preserves it. This test pins the *current*
-    //   behavior. The mismatch with the comment in validation.ts is
-    //   a low-priority bug — \r alone is not a prompt-injection
-    //   vector — but worth fixing when validation.ts is next touched.
+  it("strips C0 controls except \\n and \\t (the two preserved)", () => {
+    // Polish R9 (BUG #2 fix): the regex `[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]`
+    // now actually matches its comment — it strips 0x00-0x08, 0x0B, 0x0C,
+    // 0x0E-0x1F, and 0x7F (DEL). It KEEPS \t (0x09) and \n (0x0A).
+    // (\r is now stripped — see the dedicated \r test below.)
     let s = "";
     for (let c = 0; c <= 0x1f; c++) {
-      if (c === 0x09 || c === 0x0a || c === 0x0d) continue;
+      if (c === 0x09 || c === 0x0a) continue;
       s += String.fromCharCode(c);
     }
     s += "\x7f"; // DEL
@@ -337,20 +330,20 @@ describe("sanitizeUserInput — opita unicode + control-char defenses", () => {
     expect(out).not.toMatch(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/);
   });
 
-  it("preserves \\n, \\t, AND \\r (the three C0 controls we intentionally keep)", () => {
-    const input = "L1\nL2\tL3\rL4";
+  it("preserves \\n and \\t (the two C0 controls we intentionally keep)", () => {
+    const input = "L1\nL2\tL3";
     const out = sanitizeUserInput(input);
-    expect(out).toBe("L1\nL2\tL3\rL4");
+    expect(out).toBe("L1\nL2\tL3");
   });
 });
 
 describe("stripControlChars — exhaustive C0 coverage", () => {
-  // KNOWN GAP: \r (0x0D) is currently PRESERVED by stripControlChars,
-  // contrary to the comment in validation.ts that says it's stripped.
-  // See the sanitizeUserInput suite for the full note.
-  it("strips every C0 control char (0x00-0x1F, except \\n/\\t/\\r) and DEL", () => {
+  // Polish R9 (BUG #2 fix): the regex is now in sync with the comment.
+  // \r (0x0D) is now STRIPPED so Windows line endings (\r\n) normalize
+  // to \n before they reach the LLM context.
+  it("strips every C0 control char (0x00-0x1F, except \\n/\\t) and DEL", () => {
     for (let c = 0; c <= 0x1f; c++) {
-      if (c === 0x09 || c === 0x0a || c === 0x0d) continue; // preserved
+      if (c === 0x09 || c === 0x0a) continue; // preserved
       const input = `a${String.fromCharCode(c)}b`;
       expect(stripControlChars(input)).toBe("ab");
     }
@@ -365,10 +358,28 @@ describe("stripControlChars — exhaustive C0 coverage", () => {
     expect(stripControlChars("a\tb")).toBe("a\tb");
   });
 
-  it("preserves \\r (0x0D) — current behavior; comment in source is out of sync", () => {
-    // The comment in validation.ts says \r is "intentionally stripped",
-    // but the regex doesn't include 0x0D. Pinning current behavior.
-    expect(stripControlChars("a\rb")).toBe("a\rb");
+  it("strips \\r (0x0D) — Windows line endings no longer reach the LLM", () => {
+    // Polish R9 (BUG #2): \r is now stripped, matching the source comment.
+    expect(stripControlChars("a\rb")).toBe("ab");
+  });
+
+  it("strips \\v (0x0B) — vertical tab", () => {
+    expect(stripControlChars("a\x0bb")).toBe("ab");
+  });
+
+  it("strips \\f (0x0C) — form feed", () => {
+    expect(stripControlChars("a\x0cb")).toBe("ab");
+  });
+
+  it("strips \\x1F (Unit Separator)", () => {
+    expect(stripControlChars("a\x1fb")).toBe("ab");
+  });
+
+  it("normalizes CRLF to LF (\\r\\n → \\n)", () => {
+    // The canonical Windows line ending collapses to Unix \n when \r
+    // is stripped. This is the most important practical effect of the
+    // BUG #2 fix: pasted Windows text no longer leaks \r into prompts.
+    expect(stripControlChars("L1\r\nL2\r\nL3")).toBe("L1\nL2\nL3");
   });
 
   it("preserves opita diacritics and emojis even when surrounded by controls", () => {
