@@ -70,6 +70,12 @@ export default $config({
     //   PR #9: bumped timeout to 60s to absorb the 5-8s cold-start tax
     //   when the model has to load on a fresh Lambda container.
     //   PR #9: added CORPUS_PATH env var (S3-baked artifact in Phase 2).
+    //   Polish R7: architecture arm64 explicit (REQ-7.1 deviation fix —
+    //     Graviton2 = ~34% better price/perf vs x86_64 per AWS docs,
+    //     no native x86 dependencies in our Node 22 + Hono 4 stack).
+    //   Polish R7: reserved concurrency cap = 10 invocations — prevents
+    //     runaway cost if abused / DoS (Lambda + DDB are pay-per-call).
+    //   Polish R7: explicit log retention 1 month (default) for cost.
     const apiFn = new sst.aws.Function("ApiFn", {
       url: true,
       handler: "src/api.handler",
@@ -85,6 +91,14 @@ export default $config({
       },
       memory: "2048 MB",
       timeout: "60 seconds",
+      architecture: "arm64",
+      concurrency: {
+        reserved: 10,
+      },
+      logging: {
+        retention: "1 month",
+        format: "json",
+      },
     });
 
     // ─── Router (api.sociedad.opitacode.com) ───────────────────
