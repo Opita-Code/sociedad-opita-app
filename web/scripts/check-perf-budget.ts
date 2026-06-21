@@ -80,10 +80,7 @@ function listFilesRecursive(dir: string): string[] {
 }
 
 function totalDistBytes(): number {
-  return listFilesRecursive(DIST_ROOT).reduce(
-    (sum, f) => sum + statSync(f).size,
-    0,
-  );
+  return listFilesRecursive(DIST_ROOT).reduce((sum, f) => sum + statSync(f).size, 0);
 }
 
 function sharedCssBytes(): number {
@@ -135,7 +132,7 @@ function main(): void {
     const size = statSync(abs).size;
     const ok = size <= PER_PAGE_HTML_MAX;
     console.log(
-      `   ${ok ? "✅" : "❌"} ${p.route.padEnd(10)} ${fmtKB(size).padStart(10)}  ${ok ? "" : `> ${fmtKB(PER_PAGE_HTML_MAX)}`}`,
+      `   ${ok ? "✅" : "❌"} ${p.route.padEnd(10)} ${fmtKB(size).padStart(10)}  ${ok ? "" : `> ${fmtKB(PER_PAGE_HTML_MAX)}`}`
     );
     if (!ok) {
       violations.push({
@@ -150,7 +147,7 @@ function main(): void {
   console.log("\nShared CSS:");
   const cssOk = cssSharedBytes <= PER_PAGE_CSS_MAX;
   console.log(
-    `   ${cssOk ? "✅" : "❌"} _astro/*.css  ${fmtKB(cssSharedBytes).padStart(10)}  ${cssOk ? "" : `> ${fmtKB(PER_PAGE_CSS_MAX)}`}`,
+    `   ${cssOk ? "✅" : "❌"} _astro/*.css  ${fmtKB(cssSharedBytes).padStart(10)}  ${cssOk ? "" : `> ${fmtKB(PER_PAGE_CSS_MAX)}`}`
   );
   if (!cssOk) {
     violations.push({
@@ -164,7 +161,7 @@ function main(): void {
   console.log("\nTotal dist:");
   const totalOk = total <= TOTAL_DIST_MAX;
   console.log(
-    `   ${totalOk ? "✅" : "❌"} ${fmtKB(total).padStart(10)}  ${totalOk ? "" : `> ${fmtKB(TOTAL_DIST_MAX)}`}`,
+    `   ${totalOk ? "✅" : "❌"} ${fmtKB(total).padStart(10)}  ${totalOk ? "" : `> ${fmtKB(TOTAL_DIST_MAX)}`}`
   );
   if (!totalOk) {
     violations.push({
@@ -183,9 +180,7 @@ function main(): void {
   console.error(`❌ ${violations.length} budget violation(s):`);
   for (const v of violations) {
     const where = v.page ? `${v.page}: ${v.metric}` : v.metric;
-    console.error(
-      `   - ${where}: ${fmtKB(v.value)} > ${fmtKB(v.limit)}`,
-    );
+    console.error(`   - ${where}: ${fmtKB(v.value)} > ${fmtKB(v.limit)}`);
   }
   console.error("\nFix the bloat or update DEPLOY-RUNBOOK.md if the budget");
   console.error("should be revised. Do not silently raise the limit.");

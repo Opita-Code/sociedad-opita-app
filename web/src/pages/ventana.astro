@@ -1,6 +1,6 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { TELLO_PERSONAS } from '../../../api/src/personas';
+import Layout from "../layouts/Layout.astro";
+import { TELLO_PERSONAS } from "../../../api/src/personas";
 
 /**
  * Sociedad Opita — La Ventana
@@ -14,12 +14,9 @@ import { TELLO_PERSONAS } from '../../../api/src/personas';
  * del dataset, y dos de sus muletillas validadas por hablante nativo.
  */
 
-const norm = (s: string): string =>
-  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const norm = (s: string): string => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-const personaLookup = Object.fromEntries(
-  TELLO_PERSONAS.map((p) => [norm(p.display_name), p]),
-);
+const personaLookup = Object.fromEntries(TELLO_PERSONAS.map((p) => [norm(p.display_name), p]));
 
 interface Evento {
   hora: string;
@@ -30,68 +27,78 @@ interface Evento {
 
 const eventos: Evento[] = [
   {
-    hora: '06:00',
-    persona: 'Doña Rosa Elvira',
-    rol: 'tendera fiadera',
-    texto: 'Abre la tienda. Pon el tinto. Barre el andén. Dice: «Mire ve, mijo: madrugar es de Dios, y el que madruga, Dios lo ayuda.»',
+    hora: "06:00",
+    persona: "Doña Rosa Elvira",
+    rol: "tendera fiadera",
+    texto:
+      "Abre la tienda. Pon el tinto. Barre el andén. Dice: «Mire ve, mijo: madrugar es de Dios, y el que madruga, Dios lo ayuda.»",
   },
   {
-    hora: '06:30',
-    persona: 'Don Rosalío',
-    rol: 'ganadero propietario',
-    texto: 'Revisa el ganado en la finca. Le grita al perro. Dice: «Le digo yo, mijo: este animal come más que un cristiano, pero peor cosa es no tenerlo.»',
+    hora: "06:30",
+    persona: "Don Rosalío",
+    rol: "ganadero propietario",
+    texto:
+      "Revisa el ganado en la finca. Le grita al perro. Dice: «Le digo yo, mijo: este animal come más que un cristiano, pero peor cosa es no tenerlo.»",
   },
   {
-    hora: '07:00',
-    persona: 'Padre Cecilio',
-    rol: 'párroco',
-    texto: 'Entra a la iglesia. Enciende las velas. Reza el rosario. Dice: «Dios es el que sabe, hijos. Rezaremos por vivos y por difuntos por igual.»',
+    hora: "07:00",
+    persona: "Padre Cecilio",
+    rol: "párroco",
+    texto:
+      "Entra a la iglesia. Enciende las velas. Reza el rosario. Dice: «Dios es el que sabe, hijos. Rezaremos por vivos y por difuntos por igual.»",
   },
   {
-    hora: '07:30',
-    persona: 'Don Emigdio',
-    rol: 'agricultor caficultor',
-    texto: 'Sale a la finca. Revisa el café. Dice: «Si Dios quiere, este año la cosecha se deja ver. Hay que trabajar, mijo, que la tierra no da sino a quien la pisa.»',
+    hora: "07:30",
+    persona: "Don Emigdio",
+    rol: "agricultor caficultor",
+    texto:
+      "Sale a la finca. Revisa el café. Dice: «Si Dios quiere, este año la cosecha se deja ver. Hay que trabajar, mijo, que la tierra no da sino a quien la pisa.»",
   },
   {
-    hora: '08:00',
-    persona: 'Doña Prudencia',
-    rol: 'viuda anfitriona',
-    texto: 'Abre la casa. Barre el patio. Recibe al nieto. Dice: «Dios mediante, mijita, hoy le llevo un tintico a Doña Rosa. Pues sí mijita, aquí no se viene con las manos vacías.»',
+    hora: "08:00",
+    persona: "Doña Prudencia",
+    rol: "viuda anfitriona",
+    texto:
+      "Abre la casa. Barre el patio. Recibe al nieto. Dice: «Dios mediante, mijita, hoy le llevo un tintico a Doña Rosa. Pues sí mijita, aquí no se viene con las manos vacías.»",
   },
   {
-    hora: '08:30',
-    persona: 'Don Octavio',
-    rol: 'médico tradicional',
-    texto: 'Atiende en el consultorio. Prepara un agua de boldo. Dice: «Fíjese pues, mijo, eso no es así: una agüita de boldo con limoncillo le compone el mal. Le digo por su bien.»',
+    hora: "08:30",
+    persona: "Don Octavio",
+    rol: "médico tradicional",
+    texto:
+      "Atiende en el consultorio. Prepara un agua de boldo. Dice: «Fíjese pues, mijo, eso no es así: una agüita de boldo con limoncillo le compone el mal. Le digo por su bien.»",
   },
   {
-    hora: '09:00',
-    persona: 'Jhon Fredy',
-    rol: 'joven retornado',
-    texto: 'Llega de Bogotá. Pregunta por el pueblo. Dice: «Parce, qué pueblo tan bonito. Nojoda, por qué me fui. Esa vaina de Bogotá no era pa mí.»',
+    hora: "09:00",
+    persona: "Jhon Fredy",
+    rol: "joven retornado",
+    texto:
+      "Llega de Bogotá. Pregunta por el pueblo. Dice: «Parce, qué pueblo tan bonito. Nojoda, por qué me fui. Esa vaina de Bogotá no era pa mí.»",
   },
   {
-    hora: '09:30',
-    persona: 'Doña Rosa Elvira',
-    rol: 'tendera fiadera',
-    texto: 'Cuenta los chismes del domingo. Habla con la vecina por la ventana. Dice: «Le cuento, mija: eso sí es verriondo, mire ve lo que pasó el sábado en la plaza.»',
+    hora: "09:30",
+    persona: "Doña Rosa Elvira",
+    rol: "tendera fiadera",
+    texto:
+      "Cuenta los chismes del domingo. Habla con la vecina por la ventana. Dice: «Le cuento, mija: eso sí es verriondo, mire ve lo que pasó el sábado en la plaza.»",
   },
   {
-    hora: '10:00',
-    persona: 'Don Eliécer',
-    rol: 'finquero patrón',
-    texto: 'Toma café en la plaza. Habla de producción. Dice: «Hágale pues, mijo, eso no se hace: la finca pide respeto. Le digo yo, aquí las cosas son como son.»',
+    hora: "10:00",
+    persona: "Don Eliécer",
+    rol: "finquero patrón",
+    texto:
+      "Toma café en la plaza. Habla de producción. Dice: «Hágale pues, mijo, eso no se hace: la finca pide respeto. Le digo yo, aquí las cosas son como son.»",
   },
   {
-    hora: '10:30',
-    persona: 'Padre Cecilio',
-    rol: 'párroco',
-    texto: 'Bautiza un niño en la iglesia. La plaza se llena. Dice: «Bendito sea Dios, otro cristiano para este pueblo. Rezaremos por él y por toda la familia.»',
+    hora: "10:30",
+    persona: "Padre Cecilio",
+    rol: "párroco",
+    texto:
+      "Bautiza un niño en la iglesia. La plaza se llena. Dice: «Bendito sea Dios, otro cristiano para este pueblo. Rezaremos por él y por toda la familia.»",
   },
 ];
 
-const WHATSAPP_URL = 'https://wa.me/573126126085';
+const WHATSAPP_URL = "https://wa.me/573126126085";
 ---
 
 <Layout
@@ -111,57 +118,54 @@ const WHATSAPP_URL = 'https://wa.me/573126126085';
       <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
         Tello, Huila · Colombia
       </p>
-      <h1 class="text-5xl md:text-7xl font-serif text-opita-cafe mb-6 leading-tight">
-        La Ventana
-      </h1>
+      <h1 class="text-5xl md:text-7xl font-serif text-opita-cafe mb-6 leading-tight">La Ventana</h1>
       <p class="text-2xl md:text-3xl text-opita-tierra mb-8 font-serif italic">
         Mira el pueblo correr
       </p>
       <p class="text-lg md:text-xl text-opita-cafe/80 max-w-3xl leading-relaxed">
-        El reloj virtual de Tello avanza. Doña Rosa abre la tienda a las 6.
-        Don Rosalío revisa el ganado. El cura entra a la iglesia. Los chismes
-        se propagan por la plaza. Tú observas desde afuera, como en una plaza
-        real.
+        El reloj virtual de Tello avanza. Doña Rosa abre la tienda a las 6. Don Rosalío revisa el
+        ganado. El cura entra a la iglesia. Los chismes se propagan por la plaza. Tú observas desde
+        afuera, como en una plaza real.
       </p>
     </header>
 
     <!-- Timeline de eventos -->
     <section class="mb-16">
-      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-3">
-        Eventos del pueblo
-      </h2>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-3">Eventos del pueblo</h2>
       <p class="text-sm uppercase tracking-widest text-opita-tierra mb-8">
         10 eventos · 8 personas documentadas
       </p>
 
       <ol class="space-y-6">
-        {eventos.map((e) => {
-          const p = personaLookup[norm(e.persona)];
-          return (
-            <li class="border-l-4 border-opita-tierra pl-6 py-2">
-              <div class="flex flex-wrap items-baseline gap-3 mb-2">
-                <time class="text-2xl font-serif text-opita-tierra">{e.hora}</time>
-                <h3 class="text-xl font-serif text-opita-cafe">{e.persona}</h3>
-                <span class="text-sm text-opita-tierra/70 italic">· {e.rol}</span>
-              </div>
-              <p class="text-base md:text-lg text-opita-cafe/80 leading-relaxed italic">
-                {e.texto}
-              </p>
-              {p && (
-                <p class="text-xs text-opita-cafe/50 mt-2">
-                  <span class="uppercase tracking-wider">Muletillas:</span>{' '}
-                  {p.muletillas.slice(0, 2).join(' · ')}
+        {
+          eventos.map((e) => {
+            const p = personaLookup[norm(e.persona)];
+            return (
+              <li class="border-l-4 border-opita-tierra pl-6 py-2">
+                <div class="flex flex-wrap items-baseline gap-3 mb-2">
+                  <time class="text-2xl font-serif text-opita-tierra">{e.hora}</time>
+                  <h3 class="text-xl font-serif text-opita-cafe">{e.persona}</h3>
+                  <span class="text-sm text-opita-tierra/70 italic">· {e.rol}</span>
+                </div>
+                <p class="text-base md:text-lg text-opita-cafe/80 leading-relaxed italic">
+                  {e.texto}
                 </p>
-              )}
-            </li>
-          );
-        })}
+                {p && (
+                  <p class="text-xs text-opita-cafe/50 mt-2">
+                    <span class="uppercase tracking-wider">Muletillas:</span>{" "}
+                    {p.muletillas.slice(0, 2).join(" · ")}
+                  </p>
+                )}
+              </li>
+            );
+          })
+        }
       </ol>
 
       <p class="text-xs text-opita-cafe/60 mt-8 italic">
-        Eventos hardcodeados con personas, roles y muletillas del dataset
-        validado por hablante nativo (10 arquetipos de 41 documentados).
-        El reloj en vivo del pueblo se conecta en Phase 2 vía SSE.
+        Eventos hardcodeados con personas, roles y muletillas del dataset validado por hablante
+        nativo (10 arquetipos de 41 documentados). El reloj en vivo del pueblo se conecta en Phase 2
+        vía SSE.
       </p>
     </section>
 
@@ -171,24 +175,25 @@ const WHATSAPP_URL = 'https://wa.me/573126126085';
         Quiénes aparecen en esta ventana
       </h2>
       <p class="text-base text-opita-cafe/80 mb-6 leading-relaxed">
-        Estos son 8 de los 10 arquetipos validados de Tello. Los otros 2
-        (Don Rosalío y Jhon Eliécer) viven en otras escenas del pueblo
-        que aquí aún no se muestran.
+        Estos son 8 de los 10 arquetipos validados de Tello. Los otros 2 (Don Rosalío y Jhon
+        Eliécer) viven en otras escenas del pueblo que aquí aún no se muestran.
       </p>
       <ul class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-        {TELLO_PERSONAS.map((p) => (
-          <li class="flex items-baseline gap-2 text-opita-cafe/80">
-            <span class="font-serif text-opita-cafe">{p.display_name}</span>
-            <span class="text-opita-tierra/60">·</span>
-            <span class="italic">
-              {p.role
-                .replace(/parroco/g, 'párroco')
-                .replace(/medico/g, 'médico')
-                .replace(/patron/g, 'patrón')
-                .replace(/_/g, ' ')}
-            </span>
-          </li>
-        ))}
+        {
+          TELLO_PERSONAS.map((p) => (
+            <li class="flex items-baseline gap-2 text-opita-cafe/80">
+              <span class="font-serif text-opita-cafe">{p.display_name}</span>
+              <span class="text-opita-tierra/60">·</span>
+              <span class="italic">
+                {p.role
+                  .replace(/parroco/g, "párroco")
+                  .replace(/medico/g, "médico")
+                  .replace(/patron/g, "patrón")
+                  .replace(/_/g, " ")}
+              </span>
+            </li>
+          ))
+        }
       </ul>
     </section>
 
@@ -208,9 +213,7 @@ const WHATSAPP_URL = 'https://wa.me/573126126085';
         ·
         <a href={WHATSAPP_URL} class="underline hover:text-opita-tierra">WhatsApp</a>
       </p>
-      <p class="mt-6 text-xs text-opita-cafe/50">
-        © 2026 Juan Nicolás Urrutia Salcedo · CC-BY-4.0
-      </p>
+      <p class="mt-6 text-xs text-opita-cafe/50">© 2026 Juan Nicolás Urrutia Salcedo · CC-BY-4.0</p>
     </section>
   </main>
 </Layout>

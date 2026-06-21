@@ -208,7 +208,7 @@ function analyzeBundle(): BundleReport {
       allBytes: 0,
       pageCount: 0,
       fileCount: 0,
-    },
+    }
   );
   // "transfer" = HTML/CSS/JS the browser pulls (DEPLOY-RUNBOOK.md
   // sub-budget). "all" = full dist including images, fonts, robots.txt,
@@ -245,9 +245,13 @@ function main(): void {
   console.log("\n📦 Bundle analysis — Polish R3");
   console.log(`   dist:           ${DIST_ROOT}`);
   console.log(`   pages:          ${report.totals.pageCount}`);
-  console.log(`   shared chunks:  ${report.shared.html.length + report.shared.css.length + report.shared.js.length}`);
+  console.log(
+    `   shared chunks:  ${report.shared.html.length + report.shared.css.length + report.shared.js.length}`
+  );
   console.log(`   transfer total: ${fmtKB(report.totals.transferBytes)}  (HTML + CSS + JS)`);
-  console.log(`   dist total:     ${fmtKB(report.totals.allBytes)}  (${report.totals.fileCount} files, all assets)`);
+  console.log(
+    `   dist total:     ${fmtKB(report.totals.allBytes)}  (${report.totals.fileCount} files, all assets)`
+  );
 
   console.log("\nPer-page HTML payload (DEPLOY-RUNBOOK.md budget = 50 KB):");
   console.table(
@@ -255,7 +259,7 @@ function main(): void {
       route: p.route,
       html: fmtKB(p.htmlBytes),
       over_50kb: p.htmlBytes > PAGE_BUDGET_HTML_BYTES ? "⚠️" : "ok",
-    })),
+    }))
   );
 
   console.log("Total page weight (HTML + shared CSS/JS the browser loads):");
@@ -266,15 +270,13 @@ function main(): void {
       css: fmtKB(report.shared.css.reduce((s, a) => s + a.bytes, 0)),
       js: fmtKB(report.shared.js.reduce((s, a) => s + a.bytes, 0)),
       total: fmtKB(p.totalBytes),
-    })),
+    }))
   );
 
   console.log("Shared chunks:");
   const allShared: Array<{ kind: string; path: string; bytes: number }> = [];
-  for (const c of report.shared.css)
-    allShared.push({ kind: "css", path: c.path, bytes: c.bytes });
-  for (const c of report.shared.js)
-    allShared.push({ kind: "js", path: c.path, bytes: c.bytes });
+  for (const c of report.shared.css) allShared.push({ kind: "css", path: c.path, bytes: c.bytes });
+  for (const c of report.shared.js) allShared.push({ kind: "js", path: c.path, bytes: c.bytes });
   for (const c of report.shared.html)
     allShared.push({ kind: "html", path: c.path, bytes: c.bytes });
   allShared.sort((a, b) => b.bytes - a.bytes);
@@ -283,21 +285,19 @@ function main(): void {
   console.log("Budget verdict:");
   if (report.budgets.pagesOverHtmlBudget.length === 0) {
     console.log(
-      `   ✅ every page HTML ≤ ${PAGE_BUDGET_HTML_BYTES / 1024} KB (DEPLOY-RUNBOOK.md target)`,
+      `   ✅ every page HTML ≤ ${PAGE_BUDGET_HTML_BYTES / 1024} KB (DEPLOY-RUNBOOK.md target)`
     );
   } else {
-    console.log(
-      `   ⚠️  ${report.budgets.pagesOverHtmlBudget.length} page(s) over 50 KB HTML:`,
-    );
+    console.log(`   ⚠️  ${report.budgets.pagesOverHtmlBudget.length} page(s) over 50 KB HTML:`);
     for (const line of report.budgets.pagesOverHtmlBudget) console.log(`      - ${line}`);
   }
   if (report.budgets.totalDistOverBudget) {
     console.log(
-      `   ⚠️  total dist > ${TOTAL_DIST_BUDGET_BYTES / 1024} KB (${fmtKB(report.totals.allBytes)})`,
+      `   ⚠️  total dist > ${TOTAL_DIST_BUDGET_BYTES / 1024} KB (${fmtKB(report.totals.allBytes)})`
     );
   } else {
     console.log(
-      `   ✅ total dist ≤ ${TOTAL_DIST_BUDGET_BYTES / 1024} KB (${fmtKB(report.totals.allBytes)})`,
+      `   ✅ total dist ≤ ${TOTAL_DIST_BUDGET_BYTES / 1024} KB (${fmtKB(report.totals.allBytes)})`
     );
   }
 
@@ -305,15 +305,13 @@ function main(): void {
   const largestJs = [...report.shared.js].sort((a, b) => b.bytes - a.bytes)[0];
   if (largestJs && largestJs.bytes > 100 * 1024) {
     console.log(
-      `   - ${largestJs.path} is ${fmtKB(largestJs.bytes)} (shared JS) — split React islands if it grows > 200 KB.`,
+      `   - ${largestJs.path} is ${fmtKB(largestJs.bytes)} (shared JS) — split React islands if it grows > 200 KB.`
     );
   }
-  const heaviestHtml = [...report.pages].sort(
-    (a, b) => b.htmlBytes - a.htmlBytes,
-  )[0];
+  const heaviestHtml = [...report.pages].sort((a, b) => b.htmlBytes - a.htmlBytes)[0];
   if (heaviestHtml && heaviestHtml.htmlBytes > 30 * 1024) {
     console.log(
-      `   - ${heaviestHtml.route} is the heaviest HTML (${fmtKB(heaviestHtml.htmlBytes)}) — review for embedded media or large inline data.`,
+      `   - ${heaviestHtml.route} is the heaviest HTML (${fmtKB(heaviestHtml.htmlBytes)}) — review for embedded media or large inline data.`
     );
   }
 

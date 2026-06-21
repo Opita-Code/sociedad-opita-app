@@ -1,5 +1,5 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
 
 /**
  * Sociedad Opita — Home (Monumento Cultural Vivo)
@@ -20,52 +20,57 @@ import Layout from '../layouts/Layout.astro';
  * - Referencia a la Masacre del Puente de los Decapitados (1950) (decisión 1)
  */
 
-const WHATSAPP_URL = 'https://wa.me/573126126085';
+const WHATSAPP_URL = "https://wa.me/573126126085";
 
 const dimensiones = [
   {
-    href: '/ventana',
-    titulo: 'La Ventana',
-    subtitulo: 'Mira el pueblo correr',
-    descripcion: 'El reloj virtual de Tello avanza. Doña Rosa abre la tienda a las 6. Don Rosalío revisa el ganado. El cura entra a la iglesia. Los chismes se propagan por la plaza. Tú observas desde afuera, como en una plaza real.',
-    color: 'tierra',
-    icono: 'V',
-    imagen: '/tile-ventana.jpg',
-    imagen_alt: 'Biblioteca departamental Olegario Rivera, Neiva — referencia arquitectónica civil del Huila',
-    imagen_credito: 'Foto: Wikimedia Commons (CC-BY-SA-4.0)',
+    href: "/ventana",
+    titulo: "La Ventana",
+    subtitulo: "Mira el pueblo correr",
+    descripcion:
+      "El reloj virtual de Tello avanza. Doña Rosa abre la tienda a las 6. Don Rosalío revisa el ganado. El cura entra a la iglesia. Los chismes se propagan por la plaza. Tú observas desde afuera, como en una plaza real.",
+    color: "tierra",
+    icono: "V",
+    imagen: "/tile-ventana.jpg",
+    imagen_alt:
+      "Biblioteca departamental Olegario Rivera, Neiva — referencia arquitectónica civil del Huila",
+    imagen_credito: "Foto: Wikimedia Commons (CC-BY-SA-4.0)",
   },
   {
-    href: '/puente',
-    titulo: 'El Puente',
-    subtitulo: 'Háblale a sus personajes',
-    descripcion: 'Don Cecilio te habla de Dios y del pueblo. Doña Rosa te fía una panela. Jhon Fredy te cuenta por qué se fue a Bogotá y por qué volvió. Les preguntas lo que quieras. Ellos te responden en opita, con sus muletillas, con sus modos.',
-    color: 'magdalena',
-    icono: 'P',
-    imagen: '/tile-puente.jpg',
-    imagen_alt: 'Río Magdalena a la altura de Huila — el río que conecta el pueblo',
-    imagen_credito: 'Foto: Río Magdalena, Colombia 04 / Wikimedia Commons (CC-BY-SA-4.0)',
+    href: "/puente",
+    titulo: "El Puente",
+    subtitulo: "Háblale a sus personajes",
+    descripcion:
+      "Don Cecilio te habla de Dios y del pueblo. Doña Rosa te fía una panela. Jhon Fredy te cuenta por qué se fue a Bogotá y por qué volvió. Les preguntas lo que quieras. Ellos te responden en opita, con sus muletillas, con sus modos.",
+    color: "magdalena",
+    icono: "P",
+    imagen: "/tile-puente.jpg",
+    imagen_alt: "Río Magdalena a la altura de Huila — el río que conecta el pueblo",
+    imagen_credito: "Foto: Río Magdalena, Colombia 04 / Wikimedia Commons (CC-BY-SA-4.0)",
   },
   {
-    href: '/replica',
-    titulo: 'La Réplica',
-    subtitulo: 'Extiende el monumento a tu municipio',
-    descripcion: 'Si tu pueblo también merece ser preservado, replica el simulador. Universidad de Garzón, alcaldía de Pitalito, personería de La Plata. El método es abierto, la data es tuya, el código es tuyo.',
-    color: 'plaza',
-    icono: 'R',
-    imagen: '/tile-replica.jpg',
-    imagen_alt: 'Paisaje del departamento del Huila — símbolo de replicabilidad',
-    imagen_credito: 'Foto: Landscape of Huila Departement / Wikimedia Commons (CC-BY-SA-4.0)',
+    href: "/replica",
+    titulo: "La Réplica",
+    subtitulo: "Extiende el monumento a tu municipio",
+    descripcion:
+      "Si tu pueblo también merece ser preservado, replica el simulador. Universidad de Garzón, alcaldía de Pitalito, personería de La Plata. El método es abierto, la data es tuya, el código es tuyo.",
+    color: "plaza",
+    icono: "R",
+    imagen: "/tile-replica.jpg",
+    imagen_alt: "Paisaje del departamento del Huila — símbolo de replicabilidad",
+    imagen_credito: "Foto: Landscape of Huila Departement / Wikimedia Commons (CC-BY-SA-4.0)",
   },
   {
-    href: '/taller',
-    titulo: 'El Taller',
-    subtitulo: 'El detrás de escena académico',
-    descripcion: 'El paper, los 10 diálogos validados por hablante nativo, los 41 perfiles psicométricos, la metodología forense, la memoria de la Masacre del Puente de los Decapitados (1950). Para investigadores, periodistas, sociólogos.',
-    color: 'cafe',
-    icono: 'T',
-    imagen: '/tile-taller.jpg',
-    imagen_alt: 'Horno típico huilense — taller tradicional de cocina artesanal',
-    imagen_credito: 'Foto: Horno típico del Huila / Wikimedia Commons (CC-BY-SA-4.0)',
+    href: "/taller",
+    titulo: "El Taller",
+    subtitulo: "El detrás de escena académico",
+    descripcion:
+      "El paper, los 10 diálogos validados por hablante nativo, los 41 perfiles psicométricos, la metodología forense, la memoria de la Masacre del Puente de los Decapitados (1950). Para investigadores, periodistas, sociólogos.",
+    color: "cafe",
+    icono: "T",
+    imagen: "/tile-taller.jpg",
+    imagen_alt: "Horno típico huilense — taller tradicional de cocina artesanal",
+    imagen_credito: "Foto: Horno típico del Huila / Wikimedia Commons (CC-BY-SA-4.0)",
   },
 ];
 ---
@@ -85,7 +90,11 @@ const dimensiones = [
       />
       <figcaption class="text-xs text-opita-tierra mt-3 italic text-center px-4 md:px-0">
         Foto: <em>Landscape near Gigante, Colombia 01</em> por Bernard Gagnon · Wikimedia Commons · CC-BY-SA-4.0.
-        Valle andino del Magdalena, mismo terreno que Tello (no es foto de Tello — Tello aún no tiene archivo fotográfico público abierto; ver <a href="/VISUAL-HONESTY.md" class="underline hover:text-opita-verriondo">honestidad visual</a>).
+        Valle andino del Magdalena, mismo terreno que Tello (no es foto de Tello — Tello aún no tiene
+        archivo fotográfico público abierto; ver <a
+          href="/VISUAL-HONESTY.md"
+          class="underline hover:text-opita-verriondo">honestidad visual</a
+        >).
       </figcaption>
     </figure>
 
@@ -102,29 +111,32 @@ const dimensiones = [
       </p>
       <p class="text-lg md:text-xl text-opita-cafe/80 max-w-3xl mx-auto leading-relaxed">
         Tello tiene 12.908 habitantes. 41 de ellos están aquí, documentados con
-        <em>Big Five</em>, <em>Lomnitz</em> y <em>Dunbar</em>, simulados con
-        inteligencia artificial, validados por un hablante nativo del dialecto <em>opita</em>.
-        Te estamos dejando asomarte.
+        <em>Big Five</em>, <em>Lomnitz</em> y <em>Dunbar</em>, simulados con inteligencia
+        artificial, validados por un hablante nativo del dialecto <em>opita</em>. Te estamos dejando
+        asomarte.
       </p>
     </header>
 
     <!-- El hallazgo: Doña Rosa -->
-    <section class="bg-opita-arena/50 border-l-4 border-opita-tierra rounded-r-lg p-8 md:p-10 mb-20">
-      <p class="text-sm uppercase tracking-wider text-opita-tierra mb-3">
-        El hallazgo
-      </p>
+    <section
+      class="bg-opita-arena/50 border-l-4 border-opita-tierra rounded-r-lg p-8 md:p-10 mb-20"
+    >
+      <p class="text-sm uppercase tracking-wider text-opita-tierra mb-3">El hallazgo</p>
       <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-4">
         Doña Rosa controla los chismes del pueblo
       </h2>
       <p class="text-lg text-opita-cafe/80 leading-relaxed mb-4">
-        No es la más popular. No es la más habladora. Doña Rosa, la tendera,
-        es la <strong>super-spreader #1</strong> de la red social de Tello
-        porque su tienda queda en la <em>intersección geométrica</em> del pueblo.
-        Su <em>betweenness centrality</em> es 0,55. La del cura es 0,12.
-        La geometría del pueblo predice el flujo de información mejor que la psicología.
+        No es la más popular. No es la más habladora. Doña Rosa, la tendera, es la <strong
+          >super-spreader #1</strong
+        > de la red social de Tello porque su tienda queda en la <em>intersección geométrica</em> del
+        pueblo. Su <em>betweenness centrality</em> es 0,55. La del cura es 0,12. La geometría del pueblo
+        predice el flujo de información mejor que la psicología.
       </p>
       <p class="text-base text-opita-tierra italic">
-        — Descubrimiento documentado en <a href="/taller" class="underline hover:text-opita-verriondo">el taller académico</a>, replicable con los datos abiertos.
+        — Descubrimiento documentado en <a
+          href="/taller"
+          class="underline hover:text-opita-verriondo">el taller académico</a
+        >, replicable con los datos abiertos.
       </p>
     </section>
 
@@ -138,47 +150,45 @@ const dimensiones = [
       </h2>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {dimensiones.map((dim) => (
-          <a
-            href={dim.href}
-            class={`block bg-white border-2 border-opita-${dim.color} rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group`}
-          >
-            <figure class="aspect-[3/2] overflow-hidden bg-opita-hueso/30">
-              <img
-                src={dim.imagen}
-                alt={dim.imagen_alt}
-                width="900"
-                height="600"
-                loading="lazy"
-                class="w-full h-full object-cover"
-              />
-            </figure>
-            <div class="p-8">
-              <div class="flex items-start gap-4 mb-4">
-                <div class={`flex-shrink-0 w-12 h-12 rounded-full bg-opita-${dim.color} text-white flex items-center justify-center font-serif text-xl`}>
-                  {dim.icono}
+        {
+          dimensiones.map((dim) => (
+            <a
+              href={dim.href}
+              class={`block bg-white border-2 border-opita-${dim.color} rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group`}
+            >
+              <figure class="aspect-[3/2] overflow-hidden bg-opita-hueso/30">
+                <img
+                  src={dim.imagen}
+                  alt={dim.imagen_alt}
+                  width="900"
+                  height="600"
+                  loading="lazy"
+                  class="w-full h-full object-cover"
+                />
+              </figure>
+              <div class="p-8">
+                <div class="flex items-start gap-4 mb-4">
+                  <div
+                    class={`flex-shrink-0 w-12 h-12 rounded-full bg-opita-${dim.color} text-white flex items-center justify-center font-serif text-xl`}
+                  >
+                    {dim.icono}
+                  </div>
+                  <div>
+                    <h3 class={`text-2xl font-serif text-opita-${dim.color} mb-1`}>{dim.titulo}</h3>
+                    <p class="text-sm uppercase tracking-wider text-opita-tierra">
+                      {dim.subtitulo}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 class={`text-2xl font-serif text-opita-${dim.color} mb-1`}>
-                    {dim.titulo}
-                  </h3>
-                  <p class="text-sm uppercase tracking-wider text-opita-tierra">
-                    {dim.subtitulo}
-                  </p>
-                </div>
+                <p class="text-base text-opita-cafe/80 leading-relaxed">{dim.descripcion}</p>
+                <p class={`mt-4 text-sm text-opita-${dim.color} group-hover:underline`}>
+                  Entrar a {dim.titulo.toLowerCase()} →
+                </p>
+                <p class="text-[10px] text-opita-cafe/50 italic mt-3">{dim.imagen_credito}</p>
               </div>
-              <p class="text-base text-opita-cafe/80 leading-relaxed">
-                {dim.descripcion}
-              </p>
-              <p class={`mt-4 text-sm text-opita-${dim.color} group-hover:underline`}>
-                Entrar a {dim.titulo.toLowerCase()} →
-              </p>
-              <p class="text-[10px] text-opita-cafe/50 italic mt-3">
-                {dim.imagen_credito}
-              </p>
-            </div>
-          </a>
-        ))}
+            </a>
+          ))
+        }
       </div>
     </section>
 
@@ -216,13 +226,11 @@ const dimensiones = [
 
     <!-- El Himno de Tello -->
     <section class="mb-20">
-      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
-        Canto del pueblo
-      </p>
-      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">
-        El Himno de Tello
-      </h2>
-      <blockquote class="border-l-4 border-opita-plaza bg-opita-arena/40 rounded-r-lg p-6 md:p-8 mb-4">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">Canto del pueblo</p>
+      <h2 class="text-3xl md:text-4xl font-serif text-opita-cafe mb-6">El Himno de Tello</h2>
+      <blockquote
+        class="border-l-4 border-opita-plaza bg-opita-arena/40 rounded-r-lg p-6 md:p-8 mb-4"
+      >
         <p class="text-lg md:text-xl font-serif text-opita-cafe/90 leading-snug italic mb-4">
           "Salve, Tello querido,<br />
           oasis de verdor,<br />
@@ -231,44 +239,44 @@ const dimensiones = [
         </p>
         <footer class="text-sm text-opita-tierra not-italic">
           — Fragmento del Himno de Tello, letra de <strong>Álvaro Velásquez</strong>
-          (música de <strong>Delia Camacho</strong>). Himno de uso público en
-          actos cívicos municipales; transcripción tomada de fuentes orales
-          locales. Para la versión completa, contactar al archivo municipal.
+          (música de <strong>Delia Camacho</strong>). Himno de uso público en actos cívicos
+          municipales; transcripción tomada de fuentes orales locales. Para la versión completa,
+          contactar al archivo municipal.
         </footer>
       </blockquote>
       <p class="text-xs text-opita-cafe/60 italic">
-        Si el autor o sus derechohabientes requieren atribución formal o retirada,
-        escribir a <a href={WHATSAPP_URL} class="underline hover:text-opita-tierra">WhatsApp</a>.
+        Si el autor o sus derechohabientes requieren atribución formal o retirada, escribir a <a
+          href={WHATSAPP_URL}
+          class="underline hover:text-opita-tierra">WhatsApp</a
+        >.
       </p>
     </section>
 
     <!-- La promesa -->
     <section class="text-center max-w-3xl mx-auto mb-20">
-      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
-        La promesa
-      </p>
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">La promesa</p>
       <p class="text-2xl md:text-3xl font-serif text-opita-cafe leading-snug mb-6">
         Hecho por un nativo huilense, en el Huila, con IA,
         <br />
         para que Tello no se muera cuando los pelaos se vayan pa' Bogotá.
       </p>
       <p class="text-base text-opita-cafe/70">
-        Sociedad Opita es un proyecto personal de Juan Nicolás Urrutia Salcedo.
-        Código abierto. Datos abiertos. Idioma preservado.
+        Sociedad Opita es un proyecto personal de Juan Nicolás Urrutia Salcedo. Código abierto.
+        Datos abiertos. Idioma preservado.
       </p>
     </section>
 
     <!-- Contacto: puente de WhatsApp -->
-    <section class="border-2 border-opita-plaza rounded-lg p-8 md:p-10 mb-20 text-center bg-opita-plaza/10">
-      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
-        Conversemos
-      </p>
+    <section
+      class="border-2 border-opita-plaza rounded-lg p-8 md:p-10 mb-20 text-center bg-opita-plaza/10"
+    >
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">Conversemos</p>
       <h2 class="text-2xl md:text-3xl font-serif text-opita-cafe mb-4">
         ¿Quieres llevar el monumento a tu municipio?
       </h2>
       <p class="text-base text-opita-cafe/80 mb-6 max-w-2xl mx-auto">
-        Escríbenos por WhatsApp. Te contamos cómo funciona la réplica, qué
-        necesita cada pueblo, y cuánto tarda. Sin formularios, sin espera.
+        Escríbenos por WhatsApp. Te contamos cómo funciona la réplica, qué necesita cada pueblo, y
+        cuánto tarda. Sin formularios, sin espera.
       </p>
       <a
         href={WHATSAPP_URL}
@@ -277,16 +285,20 @@ const dimensiones = [
         Escribir por WhatsApp
       </a>
       <p class="text-xs text-opita-cafe/60 mt-4">
-        O explora por tu cuenta: <a href="/replica" class="underline hover:text-opita-tierra">Réplica</a> · <a href="/taller" class="underline hover:text-opita-tierra">Taller</a>
+        O explora por tu cuenta: <a href="/replica" class="underline hover:text-opita-tierra"
+          >Réplica</a
+        > · <a href="/taller" class="underline hover:text-opita-tierra">Taller</a>
       </p>
     </section>
 
     <!-- La memoria del 1950 -->
     <section class="text-center text-sm text-opita-cafe/70 mb-8 border-t border-opita-hueso pt-10">
       <p>
-        Sociedad Opita también recuerda. La <a href="/taller#masacre-1950" class="underline hover:text-opita-tierra">Masacre del Puente de los Decapitados (1950)</a>
-        hace parte de la memoria del pueblo — no es un dato a explotar, es una
-        herida que se honra.
+        Sociedad Opita también recuerda. La <a
+          href="/taller#masacre-1950"
+          class="underline hover:text-opita-tierra">Masacre del Puente de los Decapitados (1950)</a
+        >
+        hace parte de la memoria del pueblo — no es un dato a explotar, es una herida que se honra.
       </p>
       <p class="mt-4">
         <a href="/taller" class="underline hover:text-opita-tierra">Leer el taller académico</a>
