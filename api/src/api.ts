@@ -21,6 +21,7 @@ import type { Context } from "hono";
 import { CIUDADES, TELLO_PERSONAS, type Persona } from "./personas";
 import dialogueApp from "./handlers/dialogue";
 import personasApp from "./handlers/personas";
+import { observabilityMiddleware } from "./observability/middleware";
 
 const app = new Hono();
 
@@ -41,6 +42,12 @@ app.use("*", async (c, next) => {
   if (c.req.method === "OPTIONS") return c.body(null, 204);
   await next();
 });
+
+// Polish R6 (observability): structured logger + CloudWatch EMF metrics.
+// Runs AFTER CORS so OPTIONS preflights return 204 without polluting
+// telemetry with one short-lived 204 per CORS preflight, and BEFORE
+// the route handlers so timing captures the real handler work.
+app.use("*", observabilityMiddleware);
 
 // Health check
 app.get("/health", (c) => c.json({ status: "ok", service: "sociedad-opita-api" }));
