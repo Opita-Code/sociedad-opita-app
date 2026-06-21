@@ -26,3 +26,9 @@ pnpm-debug.log*
 
 # test
 coverage/
+
+# simple-git-hooks misdetects git root in monorepo subdirs and may write
+# hooks here; git itself ignores this directory. Kept out of VCS so the
+# misplaced directory does not pollute commits.
+.git/
+

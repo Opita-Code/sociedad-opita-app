@@ -14,7 +14,7 @@ concurrency:
 jobs:
   # ─── API (api/ — pnpm) ──────────────────────────────────────────
   api:
-    name: API — typecheck + test
+    name: API — lint + format + typecheck + test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,6 +34,18 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        # Polish R10: ESLint 9 flat config — warnings are non-blocking
+        # (--max-warnings 999) so legacy code can be migrated incrementally.
+        run: pnpm lint
+        continue-on-error: true
+
+      - name: Format check
+        # Polish R10: Prettier 3 check — surfaces formatting drift without
+        # auto-fixing; intentional formatting drift is documented per-PR.
+        run: pnpm format:check
+        continue-on-error: true
 
       - name: Typecheck
         run: pnpm typecheck
