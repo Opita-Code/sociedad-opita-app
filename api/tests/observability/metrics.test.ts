@@ -64,7 +64,10 @@ describe("metrics — EMF envelope", () => {
       metrics.increment("invocations_total", 1, { route: "/v1/dialogue", method: "POST" })
     );
     expect(docs).toHaveLength(1);
-    const doc = docs[0];
+    // Polish R11: `!` after the length-1 assertion above so
+    // `noUncheckedIndexedAccess` is satisfied — `docs[0]` is typed
+    // as `T | undefined` under strict mode.
+    const doc = docs[0]!;
     expect(doc._aws).toBeDefined();
     expect(doc._aws?.CloudWatchMetrics?.Namespace).toBe("SociedadOpita");
     expect(doc._aws?.CloudWatchMetrics?.Dimensions).toEqual([["route", "method"]]);
@@ -78,7 +81,7 @@ describe("metrics — EMF envelope", () => {
       metrics.histogram("duration_ms", 123.4, { route: "/v1/dialogue" })
     );
     expect(docs).toHaveLength(1);
-    const doc = docs[0];
+    const doc = docs[0]!;
     expect(doc._aws?.CloudWatchMetrics?.Metrics).toEqual([
       { Name: "duration_ms", Unit: "Milliseconds" },
     ]);
@@ -86,10 +89,8 @@ describe("metrics — EMF envelope", () => {
   });
 
   it("emits the metric name as a flat top-level field with the value", () => {
-    const { docs } = captureEmf(() =>
-      metrics.histogram("duration_ms", 42, { route: "/health" })
-    );
-    const doc = docs[0];
+    const { docs } = captureEmf(() => metrics.histogram("duration_ms", 42, { route: "/health" }));
+    const doc = docs[0]!;
     expect(doc["duration_ms"]).toBe(42);
   });
 
@@ -101,7 +102,7 @@ describe("metrics — EMF envelope", () => {
         persona_id: "dona_rosa_tendera",
       })
     );
-    const doc = docs[0];
+    const doc = docs[0]!;
     expect(doc.route).toBe("/v1/dialogue");
     expect(doc.status).toBe("200");
     expect(doc.persona_id).toBe("dona_rosa_tendera");
@@ -109,11 +110,9 @@ describe("metrics — EMF envelope", () => {
 
   it("uses Timestamp within ±1 second of Date.now() at call time", () => {
     const before = Date.now();
-    const { docs } = captureEmf(() =>
-      metrics.increment("test_metric", 1, { route: "/x" })
-    );
+    const { docs } = captureEmf(() => metrics.increment("test_metric", 1, { route: "/x" }));
     const after = Date.now();
-    const ts = docs[0]._aws?.Timestamp;
+    const ts = docs[0]!._aws?.Timestamp;
     expect(typeof ts).toBe("number");
     expect(ts).toBeGreaterThanOrEqual(before);
     expect(ts).toBeLessThanOrEqual(after);
@@ -123,19 +122,19 @@ describe("metrics — EMF envelope", () => {
 describe("metrics — defaults", () => {
   it("increment() defaults value to 1", () => {
     const { docs } = captureEmf(() => metrics.increment("invocations_total"));
-    expect(docs[0]["invocations_total"]).toBe(1);
-    expect(docs[0]._aws?.CloudWatchMetrics?.Metrics?.[0]?.Unit).toBe("Count");
+    expect(docs[0]!["invocations_total"]).toBe(1);
+    expect(docs[0]!._aws?.CloudWatchMetrics?.Metrics?.[0]?.Unit).toBe("Count");
   });
 
   it("increment() defaults dimensions to an empty object (no Dimensions entry)", () => {
     const { docs } = captureEmf(() => metrics.increment("bare_metric"));
-    const doc = docs[0];
+    const doc = docs[0]!;
     expect(doc._aws?.CloudWatchMetrics?.Dimensions).toEqual([[]]);
   });
 
   it("histogram() requires an explicit value (no silent default to 0)", () => {
     const { docs } = captureEmf(() => metrics.histogram("duration_ms", 17, {}));
-    expect(docs[0]["duration_ms"]).toBe(17);
+    expect(docs[0]!["duration_ms"]).toBe(17);
   });
 
   it("emits one EMF line per call (no batching, no buffering)", () => {
@@ -145,9 +144,9 @@ describe("metrics — defaults", () => {
       metrics.increment("c_total", 1, { route: "/r" });
     });
     expect(docs).toHaveLength(3);
-    expect((docs[0]["a_total"])).toBe(1);
-    expect((docs[1]["b_ms"])).toBe(5);
-    expect((docs[2]._aws?.CloudWatchMetrics?.Dimensions)).toEqual([["route"]]);
+    expect(docs[0]!["a_total"]).toBe(1);
+    expect(docs[1]!["b_ms"]).toBe(5);
+    expect(docs[2]!._aws?.CloudWatchMetrics?.Dimensions).toEqual([["route"]]);
   });
 });
 
@@ -159,22 +158,22 @@ describe("metrics — dimension cardinality", () => {
         persona_id: "don_rosalio",
       })
     );
-    expect(docs[0]._aws?.CloudWatchMetrics?.Dimensions).toEqual([["route", "persona_id"]]);
-    expect(docs[0].persona_id).toBe("don_rosalio");
+    expect(docs[0]!._aws?.CloudWatchMetrics?.Dimensions).toEqual([["route", "persona_id"]]);
+    expect(docs[0]!.persona_id).toBe("don_rosalio");
   });
 
   it("supports status_code as a dimension (200 vs 500 split)", () => {
     const { docs } = captureEmf(() =>
       metrics.increment("errors_total", 1, { route: "/v1/dialogue", status_code: "500" })
     );
-    expect(docs[0].status_code).toBe("500");
+    expect(docs[0]!.status_code).toBe("500");
   });
 
   it("preserves dimension order — first-seen wins (stable for CloudWatch)", () => {
     const { docs } = captureEmf(() =>
       metrics.histogram("duration_ms", 100, { route: "/v1/dialogue", method: "POST" })
     );
-    expect(docs[0]._aws?.CloudWatchMetrics?.Dimensions?.[0]).toEqual(["route", "method"]);
+    expect(docs[0]!._aws?.CloudWatchMetrics?.Dimensions?.[0]).toEqual(["route", "method"]);
   });
 });
 
