@@ -48,28 +48,15 @@ interface EmfDoc {
 const NAMESPACE = "SociedadOpita";
 
 class MetricsClient {
-  increment(
-    name: string,
-    value: number = 1,
-    dimensions: MetricDimensions = {}
-  ): void {
+  increment(name: string, value: number = 1, dimensions: MetricDimensions = {}): void {
     this.emit(name, value, "Count", dimensions);
   }
 
-  histogram(
-    name: string,
-    value: number,
-    dimensions: MetricDimensions = {}
-  ): void {
+  histogram(name: string, value: number, dimensions: MetricDimensions = {}): void {
     this.emit(name, value, "Milliseconds", dimensions);
   }
 
-  private emit(
-    name: string,
-    value: number,
-    unit: string,
-    dimensions: MetricDimensions
-  ): void {
+  private emit(name: string, value: number, unit: string, dimensions: MetricDimensions): void {
     const dimKeys = Object.keys(dimensions);
     const doc: EmfDoc = {
       _aws: {

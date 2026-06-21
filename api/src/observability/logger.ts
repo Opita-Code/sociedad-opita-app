@@ -79,7 +79,10 @@ function redactString(input: string): string {
   }
 
   // Step 3: restore IPv4 addresses verbatim.
-  return protectedStr.replace(/\u0000IPV4_(\d+)\u0000/g, (_match, idx) => ipv4Bank[Number(idx)] ?? "");
+  return protectedStr.replace(
+    /\u0000IPV4_(\d+)\u0000/g,
+    (_match, idx) => ipv4Bank[Number(idx)] ?? ""
+  );
 }
 
 function redactContext(ctx: LogContext): LogContext {

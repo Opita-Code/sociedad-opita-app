@@ -42,7 +42,12 @@ export const TELLO_PERSONAS: Persona[] = [
     speaking_style: ["frases_cortas_secas", "muletilla_ancestral", "evita_compromiso_escrito"],
     motivations: ["mantener_la_finca_en_familia", "prestigio_entre_vecinos"],
     fears: ["perder_la_finca", "ser_visto_como_debil"],
-    network: { betweenness: 0.42, degree: 14, aliados: ["dona_rosa_tendera"], conflictos: ["jhon_fredy_joven"] },
+    network: {
+      betweenness: 0.42,
+      degree: 14,
+      aliados: ["dona_rosa_tendera"],
+      conflictos: ["jhon_fredy_joven"],
+    },
   },
   {
     persona_id: "dona_rosa_tendera",
@@ -58,7 +63,12 @@ export const TELLO_PERSONAS: Persona[] = [
     speaking_style: ["cuenta_chismes", "ofrece_fiado", "saluda_con_detalle_familiar"],
     motivations: ["ser_el_centro_de_informacion", "tener_buen_fiado_cobrable"],
     fears: ["que_se_muera_el_pueblo", "perder_la_tienda"],
-    network: { betweenness: 0.55, degree: 18, aliados: ["don_rosalio_ganadero", "padre_cecilio_sacerdote"], conflictos: [] },
+    network: {
+      betweenness: 0.55,
+      degree: 18,
+      aliados: ["don_rosalio_ganadero", "padre_cecilio_sacerdote"],
+      conflictos: [],
+    },
   },
   {
     persona_id: "padre_cecilio_sacerdote",
@@ -74,7 +84,12 @@ export const TELLO_PERSONAS: Persona[] = [
     speaking_style: ["usa_eufemismos_religiosos", "invoca_Dios_o_santos", "perdona_en_voz_alta"],
     motivations: ["salvar_almas", "mantener_unidad_del_pueblo"],
     fears: ["perder_llamada", "vejez_sin_parroquia"],
-    network: { betweenness: 0.12, degree: 14, aliados: ["dona_prudencia_viuda", "don_emigdio_agricultor"], conflictos: [] },
+    network: {
+      betweenness: 0.12,
+      degree: 14,
+      aliados: ["dona_prudencia_viuda", "don_emigdio_agricultor"],
+      conflictos: [],
+    },
   },
   {
     persona_id: "dona_prudencia_viuda",
@@ -90,7 +105,12 @@ export const TELLO_PERSONAS: Persona[] = [
     speaking_style: ["ofrece_tinto_o_comida", "cuenta_de_familiares_difuntos", "tono_de_abuela"],
     motivations: ["mantener_memoria_de_los_difuntos", "cuidar_a_los_demas"],
     fears: ["soledad_en_la_vejez", "que_desaparezcan_las_costumbres"],
-    network: { betweenness: 0.05, degree: 11, aliados: ["padre_cecilio_sacerdote"], conflictos: [] },
+    network: {
+      betweenness: 0.05,
+      degree: 11,
+      aliados: ["padre_cecilio_sacerdote"],
+      conflictos: [],
+    },
   },
   {
     persona_id: "jhon_eliecer_jornalero",
@@ -106,7 +126,12 @@ export const TELLO_PERSONAS: Persona[] = [
     speaking_style: ["frases_muy_cortas", "tono_amargo", "ironia_pasivo_agresiva"],
     motivations: ["tener_tierra_propia_antes_de_morir", "que_los_hijos_estudien"],
     fears: ["morir_sin_tierra", "quedar_sin_trabajo"],
-    network: { betweenness: 0.18, degree: 6, aliados: ["dona_prudencia_viuda"], conflictos: ["don_rosalio_ganadero", "don_eliecer_patron"] },
+    network: {
+      betweenness: 0.18,
+      degree: 6,
+      aliados: ["dona_prudencia_viuda"],
+      conflictos: ["don_rosalio_ganadero", "don_eliecer_patron"],
+    },
   },
   {
     persona_id: "don_octavio_medico",
@@ -122,7 +147,12 @@ export const TELLO_PERSONAS: Persona[] = [
     speaking_style: ["habla_de_sintomas", "pregunta_por_dieta", "tono_de_consultorio"],
     motivations: ["curar_al_pueblo", "dejar_saber_antes_de_morir"],
     fears: ["que_llegue_un_medico_moderno_y_lo_reemplace"],
-    network: { betweenness: 0.28, degree: 12, aliados: ["padre_cecilio_sacerdote", "don_emigdio_agricultor"], conflictos: [] },
+    network: {
+      betweenness: 0.28,
+      degree: 12,
+      aliados: ["padre_cecilio_sacerdote", "don_emigdio_agricultor"],
+      conflictos: [],
+    },
   },
   {
     persona_id: "don_emigdio_agricultor",
@@ -138,7 +168,12 @@ export const TELLO_PERSONAS: Persona[] = [
     speaking_style: ["frases_muy_cortas", "habla_de_clima_y_cosecha", "tono_serio"],
     motivations: ["buena_cosecha", "que_los_hijos_no_se_vayan"],
     fears: ["perder_cosecha", "quedarse_solo"],
-    network: { betweenness: 0.25, degree: 13, aliados: ["don_rosalio_ganadero", "padre_cecilio_sacerdote"], conflictos: [] },
+    network: {
+      betweenness: 0.25,
+      degree: 13,
+      aliados: ["don_rosalio_ganadero", "padre_cecilio_sacerdote"],
+      conflictos: [],
+    },
   },
   {
     persona_id: "don_eliecer_patron",
@@ -154,7 +189,12 @@ export const TELLO_PERSONAS: Persona[] = [
     speaking_style: ["habla_de_produccion", "da_ordenes_indirectas", "tono_de_patron"],
     motivations: ["mantener_orden_en_la_finca", "prestigio_como_patron"],
     fears: ["perder_autoridad", "que_lo_vean_como_blando"],
-    network: { betweenness: 0.32, degree: 10, aliados: ["don_rosalio_ganadero"], conflictos: ["jhon_eliecer_jornalero"] },
+    network: {
+      betweenness: 0.32,
+      degree: 10,
+      aliados: ["don_rosalio_ganadero"],
+      conflictos: ["jhon_eliecer_jornalero"],
+    },
   },
   {
     persona_id: "jhon_jairo_sacristan",
@@ -186,7 +226,12 @@ export const TELLO_PERSONAS: Persona[] = [
     speaking_style: ["mezcla_registros", "critica_con_humor", "habla_de_plata_y_no_de_tierra"],
     motivations: ["encontrar_trabajo_digno", "tener_plata_propia"],
     fears: ["terminar_como_su_padre", "volver_a_bogota"],
-    network: { betweenness: 0.10, degree: 7, aliados: ["dona_rosa_tendera"], conflictos: ["don_rosalio_ganadero"] },
+    network: {
+      betweenness: 0.1,
+      degree: 7,
+      aliados: ["dona_rosa_tendera"],
+      conflictos: ["don_rosalio_ganadero"],
+    },
   },
 ];
 

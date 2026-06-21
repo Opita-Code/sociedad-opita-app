@@ -174,7 +174,7 @@ describe("Polish R9 — cost.recordInvocation() integration", () => {
       expect.objectContaining({
         model: "deepseek-chat",
         tokens_out: 10,
-      }),
+      })
     );
   });
 
@@ -196,7 +196,7 @@ describe("Polish R9 — cost.recordInvocation() integration", () => {
       expect.objectContaining({
         conv_id: "conv-cost-1",
         persona_id: "dona_rosa_tendera",
-      }),
+      })
     );
   });
 

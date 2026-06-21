@@ -27,9 +27,7 @@ export interface OcaisStreamOptions {
   temperature?: number;
 }
 
-export type OcaisChunk =
-  | { type: "text"; text: string }
-  | { type: "done"; cost: number };
+export type OcaisChunk = { type: "text"; text: string } | { type: "done"; cost: number };
 
 const DEFAULT_MODEL = "deepseek-chat";
 const DEFAULT_TEMPERATURE = 1.3;
@@ -54,9 +52,7 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function* ocaisStream(
-  opts: OcaisStreamOptions,
-): AsyncGenerator<OcaisChunk> {
+export async function* ocaisStream(opts: OcaisStreamOptions): AsyncGenerator<OcaisChunk> {
   const model = opts.model ?? DEFAULT_MODEL;
   const temperature = opts.temperature ?? DEFAULT_TEMPERATURE;
 
@@ -94,8 +90,5 @@ export async function* ocaisStream(
 
   // Exhausted retries. Wrap the last error so HTTP handlers can return 502.
   const cause = lastError instanceof Error ? lastError : new Error(String(lastError));
-  throw new OCAISError(
-    `Upstream 5xx after ${MAX_ATTEMPTS} retries: ${cause.message}`,
-    cause,
-  );
+  throw new OCAISError(`Upstream 5xx after ${MAX_ATTEMPTS} retries: ${cause.message}`, cause);
 }

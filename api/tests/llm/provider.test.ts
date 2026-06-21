@@ -19,7 +19,7 @@ const mockStreamText = vi.mocked(streamText);
 
 /** Helper: collect all chunks from the async generator into an array. */
 async function collect(
-  gen: AsyncGenerator<{ type: string; text?: string; cost?: number }>,
+  gen: AsyncGenerator<{ type: string; text?: string; cost?: number }>
 ): Promise<Array<{ type: string; text?: string; cost?: number }>> {
   const out: Array<{ type: string; text?: string; cost?: number }> = [];
   for await (const chunk of gen) out.push(chunk);
@@ -41,7 +41,7 @@ describe("ocaisStream", () => {
       (async function* () {
         yield { type: "text", text: "Hola" } as never;
         yield { type: "text", text: " mundo" } as never;
-      })() as never,
+      })() as never
     );
 
     const chunks = await collect(ocaisStream({ system: "s", user: "u" }));
@@ -57,7 +57,7 @@ describe("ocaisStream", () => {
     mockStreamText.mockReturnValueOnce(
       (async function* () {
         yield { type: "text", text: "x" } as never;
-      })() as never,
+      })() as never
     );
 
     await collect(ocaisStream({ system: "s", user: "u" }));
@@ -71,7 +71,7 @@ describe("ocaisStream", () => {
     mockStreamText.mockReturnValueOnce(
       (async function* () {
         yield { type: "text", text: "x" } as never;
-      })() as never,
+      })() as never
     );
 
     await collect(ocaisStream({ system: "s", user: "u", model: "deepseek-reasoner" }));
@@ -119,9 +119,9 @@ describe("ocaisStream", () => {
 
     // Attach the rejection handler BEFORE running timers so vitest never sees
     // the rejection as unhandled.
-    const expectation = expect(
-      collect(ocaisStream({ system: "s", user: "u" })),
-    ).rejects.toThrow(/Upstream 5xx after 3 retries/);
+    const expectation = expect(collect(ocaisStream({ system: "s", user: "u" }))).rejects.toThrow(
+      /Upstream 5xx after 3 retries/
+    );
 
     await vi.runAllTimersAsync();
     await expectation;
@@ -135,9 +135,7 @@ describe("ocaisStream", () => {
       throw new OCAISProviderError("deepseek", 400, "bad request");
     });
 
-    await expect(
-      collect(ocaisStream({ system: "s", user: "u" })),
-    ).rejects.toThrow();
+    await expect(collect(ocaisStream({ system: "s", user: "u" }))).rejects.toThrow();
 
     expect(attempts).toBe(1);
   });
@@ -146,7 +144,7 @@ describe("ocaisStream", () => {
     mockStreamText.mockReturnValueOnce(
       (async function* () {
         yield { type: "text", text: "x" } as never;
-      })() as never,
+      })() as never
     );
 
     await collect(
@@ -154,7 +152,7 @@ describe("ocaisStream", () => {
         system: "you are rosa",
         user: "hola",
         temperature: 0.7,
-      }),
+      })
     );
 
     const call = mockStreamText.mock.calls[0]![0];
@@ -168,7 +166,7 @@ describe("ocaisStream", () => {
       (async function* () {
         // 40 chars → 10 tokens → 10/1_000_000 * 0.14 = 1.4e-6 USD
         yield { type: "text", text: "a".repeat(40) } as never;
-      })() as never,
+      })() as never
     );
 
     const chunks = await collect(ocaisStream({ system: "s", user: "u" }));

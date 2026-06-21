@@ -26,7 +26,7 @@ function makeResult(
   text: string,
   score: number,
   topic: string = "test/topic",
-  personas: string[] = [],
+  personas: string[] = []
 ): RetrievalResult {
   return {
     score,
@@ -130,8 +130,12 @@ describe("buildContext() — RAG context injection", () => {
     const { system } = buildContext(
       ROSA,
       { time: "06:00", place: "tienda" },
-      [makeResult("doc-1", "Doña Rosa es la tendera del pueblo", 0.92, "personas/dona-rosa", ["dona_rosa_tendera"])],
-      "¿Qué vende?",
+      [
+        makeResult("doc-1", "Doña Rosa es la tendera del pueblo", 0.92, "personas/dona-rosa", [
+          "dona_rosa_tendera",
+        ]),
+      ],
+      "¿Qué vende?"
     );
     expect(system).toContain("Contexto del pueblo");
     expect(system).toContain("doc-1");
@@ -147,7 +151,7 @@ describe("buildContext() — RAG context injection", () => {
       ROSA,
       { time: "06:00", place: "tienda" },
       [makeResult("long-doc", longText, 0.5)],
-      "Hola",
+      "Hola"
     );
     expect(system).toContain("x".repeat(200) + "...");
     expect(system).not.toContain("x".repeat(201));
@@ -159,7 +163,7 @@ describe("buildContext() — RAG context injection", () => {
       ROSA,
       { time: "06:00", place: "tienda" },
       [makeResult("short-doc", shortText, 0.5)],
-      "Hola",
+      "Hola"
     );
     expect(system).toContain("y".repeat(150));
     expect(system).not.toContain("...");
@@ -174,7 +178,7 @@ describe("buildContext() — RAG context injection", () => {
         makeResult("d2", "second", 0.7),
         makeResult("d3", "third", 0.5),
       ],
-      "Hola",
+      "Hola"
     );
     expect(system).toMatch(/\[1\] .*first/);
     expect(system).toMatch(/\[2\] .*second/);
@@ -199,7 +203,7 @@ describe("buildContext() — user prompt format", () => {
       ROSA,
       { time: "06:30", place: "finca", weather: "lluvioso" },
       [],
-      "Pregunta?",
+      "Pregunta?"
     );
     expect(user).toContain("Clima: lluvioso");
   });
@@ -214,7 +218,7 @@ describe("buildContext() — user prompt format", () => {
       ROSA,
       { time: "06:00", place: "tienda" },
       [],
-      "¿Como esta el pueblo?",
+      "¿Como esta el pueblo?"
     );
     expect(user).toContain("Pregunta del visitante:");
     expect(user).toContain("¿Como esta el pueblo?");

@@ -47,7 +47,7 @@ export interface EventsRangeOptions {
 
 export async function getEventsByPersona(
   personaId: string,
-  options?: EventsRangeOptions,
+  options?: EventsRangeOptions
 ): Promise<VentanaEvent[]> {
   const items = await queryByPersona<Record<string, unknown>>(personaId, {
     limit: options?.limit,
@@ -58,7 +58,7 @@ export async function getEventsByPersona(
 
 export async function getEventsByTimeBucket(
   bucket: string,
-  options?: EventsRangeOptions,
+  options?: EventsRangeOptions
 ): Promise<VentanaEvent[]> {
   const items = await queryByTime<Record<string, unknown>>(bucket, {
     tsGte: options?.since,
@@ -70,7 +70,7 @@ export async function getEventsByTimeBucket(
 
 function filterByTsRange(
   items: Record<string, unknown>[],
-  options?: EventsRangeOptions,
+  options?: EventsRangeOptions
 ): Record<string, unknown>[] {
   if (!options?.since && !options?.until) return items;
   return items.filter((item) => {
@@ -81,16 +81,14 @@ function filterByTsRange(
   });
 }
 
-function sortByTsDesc(
-  items: Record<string, unknown>[],
-): VentanaEvent[] {
+function sortByTsDesc(items: Record<string, unknown>[]): VentanaEvent[] {
   const mapped = items.map(
     (raw): VentanaEvent => ({
       ts: String(raw.ts ?? ""),
       personaId: String(raw.personaId ?? ""),
       type: (raw.type as VentanaEvent["type"]) ?? "otro",
       description: String(raw.description ?? ""),
-    }),
+    })
   );
   mapped.sort((a, b) => (a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : 0));
   return mapped;

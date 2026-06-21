@@ -59,12 +59,8 @@ describe("appendEvent()", () => {
       description: "Abre la tienda",
     });
     const written = putItemPayload();
-    expect(written.pk).toBe(
-      KEYS.ventanaEvent("2025-06-21T12:00:00Z", "don_rosalio").pk,
-    );
-    expect(written.sk).toBe(
-      KEYS.ventanaEvent("2025-06-21T12:00:00Z", "don_rosalio").sk,
-    );
+    expect(written.pk).toBe(KEYS.ventanaEvent("2025-06-21T12:00:00Z", "don_rosalio").pk);
+    expect(written.sk).toBe(KEYS.ventanaEvent("2025-06-21T12:00:00Z", "don_rosalio").sk);
   });
 
   it("writes tsBucket = yyyy-mm from ts", async () => {
@@ -190,10 +186,7 @@ describe("getEventsByPersona()", () => {
   it("supports limit option", async () => {
     queryByPersonaMock.mockResolvedValueOnce([]);
     await getEventsByPersona("don_rosalio", { limit: 10 });
-    const opts = queryByPersonaMock.mock.calls[0]![1] as Record<
-      string,
-      unknown
-    >;
+    const opts = queryByPersonaMock.mock.calls[0]![1] as Record<string, unknown>;
     expect(opts.limit).toBe(10);
   });
 

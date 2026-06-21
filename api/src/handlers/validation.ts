@@ -45,8 +45,7 @@ export const CONV_ID_REGEX = /^[a-zA-Z0-9_-]{1,64}$/;
 // character class below writes them as 0x00-0x08 + 0x0B-0x1F + 0x7F,
 // which skips 0x09 and 0x0A without naming them — same result, less
 // repetition.
-export const CONTROL_CHARS_REGEX =
-  /[\x00-\x08\x0B-\x1F\x7F]/g;
+export const CONTROL_CHARS_REGEX = /[\x00-\x08\x0B-\x1F\x7F]/g;
 
 export interface ValidationError {
   field: string;
@@ -64,9 +63,7 @@ export type ValidationResult =
   | { ok: true; data: ValidDialogueRequest }
   | { ok: false; errors: ValidationError[] };
 
-const PERSONA_WHITELIST: ReadonlySet<string> = new Set(
-  TELLO_PERSONAS.map((p) => p.persona_id),
-);
+const PERSONA_WHITELIST: ReadonlySet<string> = new Set(TELLO_PERSONAS.map((p) => p.persona_id));
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -120,7 +117,7 @@ export function validateDialogueRequest(body: unknown): ValidationResult {
     pushError(
       errors,
       "persona_id",
-      `persona_id must be in the TELLO_PERSONAS whitelist (got '${personaIdRaw}')`,
+      `persona_id must be in the TELLO_PERSONAS whitelist (got '${personaIdRaw}')`
     );
   }
 
@@ -131,11 +128,7 @@ export function validateDialogueRequest(body: unknown): ValidationResult {
   } else {
     const time = sceneRaw.time;
     if (typeof time !== "string" || !TIME_REGEX.test(time)) {
-      pushError(
-        errors,
-        "scene.time",
-        "scene.time must match HH:MM 24h format (e.g., '06:30')",
-      );
+      pushError(errors, "scene.time", "scene.time must match HH:MM 24h format (e.g., '06:30')");
     }
     const place = sceneRaw.place;
     if (typeof place !== "string" || place.length === 0) {
@@ -144,21 +137,17 @@ export function validateDialogueRequest(body: unknown): ValidationResult {
       pushError(
         errors,
         "scene.place",
-        `scene.place must be at most ${MAX_PLACE_LENGTH} characters`,
+        `scene.place must be at most ${MAX_PLACE_LENGTH} characters`
       );
     }
     if (sceneRaw.weather !== undefined) {
       if (typeof sceneRaw.weather !== "string") {
-        pushError(
-          errors,
-          "scene.weather",
-          "scene.weather must be a string when provided",
-        );
+        pushError(errors, "scene.weather", "scene.weather must be a string when provided");
       } else if (sceneRaw.weather.length > MAX_WEATHER_LENGTH) {
         pushError(
           errors,
           "scene.weather",
-          `scene.weather must be at most ${MAX_WEATHER_LENGTH} characters`,
+          `scene.weather must be at most ${MAX_WEATHER_LENGTH} characters`
         );
       }
     }
@@ -177,7 +166,7 @@ export function validateDialogueRequest(body: unknown): ValidationResult {
       pushError(
         errors,
         "query",
-        `query must be at most ${MAX_QUERY_LENGTH} characters (after stripping control chars)`,
+        `query must be at most ${MAX_QUERY_LENGTH} characters (after stripping control chars)`
       );
     }
   }
@@ -191,7 +180,7 @@ export function validateDialogueRequest(body: unknown): ValidationResult {
       pushError(
         errors,
         "conv_id",
-        "conv_id must be 1-64 chars of [A-Za-z0-9_-] (no spaces or punctuation)",
+        "conv_id must be 1-64 chars of [A-Za-z0-9_-] (no spaces or punctuation)"
       );
     } else {
       cleanedConvId = body.conv_id;

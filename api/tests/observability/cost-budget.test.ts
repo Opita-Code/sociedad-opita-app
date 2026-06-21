@@ -36,7 +36,7 @@ type BudgetStatus = "ok" | "warning" | "exceeded";
 function evaluateDailyBudget(
   dailyUsd: number,
   dailyCapUsd: number = 1.0,
-  alertRatio: number = 0.8,
+  alertRatio: number = 0.8
 ): { status: BudgetStatus; ratio: number } {
   if (dailyCapUsd <= 0) return { status: "ok", ratio: 0 };
   const ratio = dailyUsd / dailyCapUsd;
@@ -48,7 +48,7 @@ function evaluateDailyBudget(
 function evaluateMonthlyBudget(
   monthlyUsd: number,
   monthlyCapUsd: number = 30.0,
-  alertRatio: number = 0.8,
+  alertRatio: number = 0.8
 ): { status: BudgetStatus; ratio: number } {
   if (monthlyCapUsd <= 0) return { status: "ok", ratio: 0 };
   const ratio = monthlyUsd / monthlyCapUsd;
@@ -214,7 +214,7 @@ describe("monthly budget — threshold semantics", () => {
 
 describe("monthly budget — projection from daily", () => {
   it("daily of $0.10 projects to monthly of $3.00 (10% of $30 cap) — 'ok'", () => {
-    const monthly = monthlyProjection(0.10);
+    const monthly = monthlyProjection(0.1);
     expect(monthly).toBeCloseTo(3.0, 10);
     const r = evaluateMonthlyBudget(monthly, 30.0);
     expect(r.status).toBe("ok");
@@ -222,21 +222,21 @@ describe("monthly budget — projection from daily", () => {
   });
 
   it("daily of $0.80 projects to monthly of $24.00 (80% of $30 cap) — 'warning'", () => {
-    const monthly = monthlyProjection(0.80);
+    const monthly = monthlyProjection(0.8);
     expect(monthly).toBeCloseTo(24.0, 10);
     const r = evaluateMonthlyBudget(monthly, 30.0);
     expect(r.status).toBe("warning");
   });
 
   it("daily of $1.00 (at the daily cap) projects to monthly of $30.00 — 'exceeded'", () => {
-    const monthly = monthlyProjection(1.00);
+    const monthly = monthlyProjection(1.0);
     expect(monthly).toBeCloseTo(30.0, 10);
     const r = evaluateMonthlyBudget(monthly, 30.0);
     expect(r.status).toBe("exceeded");
   });
 
   it("daily of $1.50 (over daily cap) projects to monthly of $45.00 (150%) — 'exceeded'", () => {
-    const monthly = monthlyProjection(1.50);
+    const monthly = monthlyProjection(1.5);
     expect(monthly).toBeCloseTo(45.0, 10);
     const r = evaluateMonthlyBudget(monthly, 30.0);
     expect(r.status).toBe("exceeded");
@@ -246,7 +246,7 @@ describe("monthly budget — projection from daily", () => {
 
 describe("budget — operator override (configurable cap)", () => {
   it("lowering the daily cap to $0.50 makes a $0.45 spend 'warning' (90% of new cap)", () => {
-    const r = evaluateDailyBudget(0.45, 0.50);
+    const r = evaluateDailyBudget(0.45, 0.5);
     expect(r.status).toBe("warning");
     expect(r.ratio).toBeCloseTo(0.9, 10);
   });
@@ -311,7 +311,7 @@ describe("budget — invariants over realistic LLM workloads", () => {
     }));
     const daily = dailyAggregate(records);
     const r = evaluateDailyBudget(daily, 1.0);
-    expect(daily).toBeCloseTo(0.70, 4);
+    expect(daily).toBeCloseTo(0.7, 4);
     expect(r.status).toBe("ok");
   });
 
@@ -353,7 +353,7 @@ describe("budget — spec compliance", () => {
 
   it("default alert threshold is 80% (0.8)", () => {
     // 80% of $1.00 = $0.80 — that's the alert boundary.
-    const at80 = evaluateDailyBudget(0.80, 1.0);
+    const at80 = evaluateDailyBudget(0.8, 1.0);
     expect(at80.status).toBe("warning");
     const justBelow = evaluateDailyBudget(0.7999, 1.0);
     expect(justBelow.status).toBe("ok");

@@ -172,7 +172,7 @@ function mockHappyStream(text: string = "ok") {
 
 describe("chaos — random persona/scene/query loops", () => {
   it("100 random valid combinations all return 200 (no 5xx)", async () => {
-    const rng = mulberry32(0xC0FFEE);
+    const rng = mulberry32(0xc0ffee);
     mockHappyStream();
 
     let pass = 0;
@@ -208,11 +208,14 @@ describe("chaos — random persona/scene/query loops", () => {
     mockHappyStream();
     const results: Record<string, number> = {};
     for (const persona_id of PERSONAS) {
-      const res = await postDialogue({
-        persona_id,
-        scene: { time: "06:00", place: "pueblo" },
-        query: "Hola",
-      }, nextChaosIp());
+      const res = await postDialogue(
+        {
+          persona_id,
+          scene: { time: "06:00", place: "pueblo" },
+          query: "Hola",
+        },
+        nextChaosIp()
+      );
       results[persona_id] = res.status;
       await res.text();
     }
@@ -224,11 +227,14 @@ describe("chaos — random persona/scene/query loops", () => {
   it("every scene (8) responds at least once successfully", async () => {
     mockHappyStream();
     for (const scene of SCENES) {
-      const res = await postDialogue({
-        persona_id: "dona_rosa_tendera",
-        scene,
-        query: "Hola",
-      }, nextChaosIp());
+      const res = await postDialogue(
+        {
+          persona_id: "dona_rosa_tendera",
+          scene,
+          query: "Hola",
+        },
+        nextChaosIp()
+      );
       expect(res.status, `scene ${scene.time}/${scene.place}`).toBe(200);
       await res.text();
     }
@@ -237,11 +243,14 @@ describe("chaos — random persona/scene/query loops", () => {
   it("every canned query (16) responds at least once successfully", async () => {
     mockHappyStream();
     for (const query of QUERIES) {
-      const res = await postDialogue({
-        persona_id: "dona_rosa_tendera",
-        scene: { time: "06:00", place: "pueblo" },
-        query,
-      }, nextChaosIp());
+      const res = await postDialogue(
+        {
+          persona_id: "dona_rosa_tendera",
+          scene: { time: "06:00", place: "pueblo" },
+          query,
+        },
+        nextChaosIp()
+      );
       expect(res.status, `query "${query}"`).toBe(200);
       await res.text();
     }
@@ -257,13 +266,42 @@ describe("chaos — malformed inputs always yield 4xx, never 5xx", () => {
     ["null body", null],
     ["nested wrong types", { persona_id: 42, scene: "tienda", query: "x" }],
     ["scene as string", { persona_id: "dona_rosa_tendera", scene: "tienda", query: "x" }],
-    ["query as number", { persona_id: "dona_rosa_tendera", scene: { time: "06:00", place: "t" }, query: 99 }],
-    ["persona_id with spaces", { persona_id: "dona rosa", scene: { time: "06:00", place: "t" }, query: "x" }],
-    ["scene.time out of range", { persona_id: "dona_rosa_tendera", scene: { time: "25:99", place: "t" }, query: "x" }],
-    ["scene.place too long", { persona_id: "dona_rosa_tendera", scene: { time: "06:00", place: "x".repeat(201) }, query: "x" }],
-    ["query empty string", { persona_id: "dona_rosa_tendera", scene: { time: "06:00", place: "t" }, query: "" }],
-    ["query too long", { persona_id: "dona_rosa_tendera", scene: { time: "06:00", place: "t" }, query: "x".repeat(1001) }],
-    ["unknown persona", { persona_id: "inexistente", scene: { time: "06:00", place: "t" }, query: "x" }],
+    [
+      "query as number",
+      { persona_id: "dona_rosa_tendera", scene: { time: "06:00", place: "t" }, query: 99 },
+    ],
+    [
+      "persona_id with spaces",
+      { persona_id: "dona rosa", scene: { time: "06:00", place: "t" }, query: "x" },
+    ],
+    [
+      "scene.time out of range",
+      { persona_id: "dona_rosa_tendera", scene: { time: "25:99", place: "t" }, query: "x" },
+    ],
+    [
+      "scene.place too long",
+      {
+        persona_id: "dona_rosa_tendera",
+        scene: { time: "06:00", place: "x".repeat(201) },
+        query: "x",
+      },
+    ],
+    [
+      "query empty string",
+      { persona_id: "dona_rosa_tendera", scene: { time: "06:00", place: "t" }, query: "" },
+    ],
+    [
+      "query too long",
+      {
+        persona_id: "dona_rosa_tendera",
+        scene: { time: "06:00", place: "t" },
+        query: "x".repeat(1001),
+      },
+    ],
+    [
+      "unknown persona",
+      { persona_id: "inexistente", scene: { time: "06:00", place: "t" }, query: "x" },
+    ],
     ["malformed JSON", "{not json"],
   ];
 
@@ -290,13 +328,22 @@ describe("chaos — malformed inputs always yield 4xx, never 5xx", () => {
 describe("chaos — concurrent requests", () => {
   it("5 simultaneous requests all complete with 200", async () => {
     mockHappyStream("concurrent");
-    const personas = ["dona_rosa_tendera", "don_rosalio_ganadero", "padre_cecilio_sacerdote", "dona_prudencia_viuda", "jhon_fredy_joven"];
+    const personas = [
+      "dona_rosa_tendera",
+      "don_rosalio_ganadero",
+      "padre_cecilio_sacerdote",
+      "dona_prudencia_viuda",
+      "jhon_fredy_joven",
+    ];
     const requests = personas.map((persona_id) =>
-      postDialogue({
-        persona_id,
-        scene: { time: "06:00", place: "pueblo" },
-        query: "Pregunta concurrente",
-      }, nextChaosIp()),
+      postDialogue(
+        {
+          persona_id,
+          scene: { time: "06:00", place: "pueblo" },
+          query: "Pregunta concurrente",
+        },
+        nextChaosIp()
+      )
     );
 
     const responses = await Promise.all(requests);
@@ -319,11 +366,14 @@ describe("chaos — concurrent requests", () => {
       yield { type: "done", cost: 0.0001 };
     });
     const requests = Array.from({ length: 10 }, (_, i) =>
-      postDialogue({
-        persona_id: "dona_rosa_tendera",
-        scene: { time: "06:00", place: "pueblo" },
-        query: `q-${i}`,
-      }, nextChaosIp()),
+      postDialogue(
+        {
+          persona_id: "dona_rosa_tendera",
+          scene: { time: "06:00", place: "pueblo" },
+          query: `q-${i}`,
+        },
+        nextChaosIp()
+      )
     );
     const responses = await Promise.all(requests);
     for (const r of responses) {
@@ -368,92 +418,104 @@ describe("chaos — stream interruption mid-flight", () => {
   // (success, error, or yield of an unknown chunk). Previously, when
   // OCAIS yielded a non-"text"/non-"done" chunk and then returned, the
   // SSE stream stayed open and the client hung.
-  it("controller.close() called when OCAIS yields an unknown chunk type", { timeout: 3000 }, async () => {
-    ocaisStreamMock.mockImplementationOnce(async function* () {
-      yield { type: "text", text: "ok " };
-      yield { type: "weird_future_type" as "text", payload: "???" } as never;
-    });
+  it(
+    "controller.close() called when OCAIS yields an unknown chunk type",
+    { timeout: 3000 },
+    async () => {
+      ocaisStreamMock.mockImplementationOnce(async function* () {
+        yield { type: "text", text: "ok " };
+        yield { type: "weird_future_type" as "text", payload: "???" } as never;
+      });
 
-    const res = await dialogueApp.request("/v1/dialogue", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        persona_id: "dona_rosa_tendera",
-        scene: { time: "06:00", place: "pueblo" },
-        query: "Hola",
-      }),
-    });
+      const res = await dialogueApp.request("/v1/dialogue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          persona_id: "dona_rosa_tendera",
+          scene: { time: "06:00", place: "pueblo" },
+          query: "Hola",
+        }),
+      });
 
-    expect(res.status).toBe(200);
+      expect(res.status).toBe(200);
 
-    const readPromise = res.text();
-    const timeoutPromise = new Promise<string>((_, reject) =>
-      setTimeout(
-        () =>
-          reject(
-            new Error(
-              "STREAM HUNG — known bug: handler does not close SSE controller after for-await loop returns without a 'done' chunk",
+      const readPromise = res.text();
+      const timeoutPromise = new Promise<string>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                "STREAM HUNG — known bug: handler does not close SSE controller after for-await loop returns without a 'done' chunk"
+              )
             ),
-          ),
-        1000,
-      ),
-    );
+          1000
+        )
+      );
 
-    const text = await Promise.race([readPromise, timeoutPromise]);
-    expect(text).toContain('"text":"ok "');
-  });
+      const text = await Promise.race([readPromise, timeoutPromise]);
+      expect(text).toContain('"text":"ok "');
+    }
+  );
 
-  it("controller.close() called even on partial stream (text-only, no done chunk)", { timeout: 3000 }, async () => {
-    // Stream yields one text chunk and ends without a "done" envelope.
-    // The handler must still close the controller — otherwise the client hangs.
-    ocaisStreamMock.mockImplementationOnce(async function* () {
-      yield { type: "text", text: "partial answer" };
-    });
+  it(
+    "controller.close() called even on partial stream (text-only, no done chunk)",
+    { timeout: 3000 },
+    async () => {
+      // Stream yields one text chunk and ends without a "done" envelope.
+      // The handler must still close the controller — otherwise the client hangs.
+      ocaisStreamMock.mockImplementationOnce(async function* () {
+        yield { type: "text", text: "partial answer" };
+      });
 
-    const res = await dialogueApp.request("/v1/dialogue", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        persona_id: "dona_rosa_tendera",
-        scene: { time: "06:00", place: "pueblo" },
-        query: "Hola",
-      }),
-    });
+      const res = await dialogueApp.request("/v1/dialogue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          persona_id: "dona_rosa_tendera",
+          scene: { time: "06:00", place: "pueblo" },
+          query: "Hola",
+        }),
+      });
 
-    expect(res.status).toBe(200);
+      expect(res.status).toBe(200);
 
-    const readPromise = res.text();
-    const timeoutPromise = new Promise<string>((_, reject) =>
-      setTimeout(() => reject(new Error("STREAM HUNG on partial text-only stream")), 1000),
-    );
-    const text = await Promise.race([readPromise, timeoutPromise]);
-    expect(text).toContain('"text":"partial answer"');
-  });
+      const readPromise = res.text();
+      const timeoutPromise = new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error("STREAM HUNG on partial text-only stream")), 1000)
+      );
+      const text = await Promise.race([readPromise, timeoutPromise]);
+      expect(text).toContain('"text":"partial answer"');
+    }
+  );
 
-  it("controller.close() called after done chunk is yielded (normal happy path)", { timeout: 3000 }, async () => {
-    // The happy path: text chunk + done chunk. The controller should be
-    // closed after the done envelope is enqueued (and try/finally must
-    // not enqueue a second close or error on the already-closed stream).
-    ocaisStreamMock.mockImplementationOnce(async function* () {
-      yield { type: "text", text: "buenos dias" };
-      yield { type: "done", cost: 0.0001 };
-    });
+  it(
+    "controller.close() called after done chunk is yielded (normal happy path)",
+    { timeout: 3000 },
+    async () => {
+      // The happy path: text chunk + done chunk. The controller should be
+      // closed after the done envelope is enqueued (and try/finally must
+      // not enqueue a second close or error on the already-closed stream).
+      ocaisStreamMock.mockImplementationOnce(async function* () {
+        yield { type: "text", text: "buenos dias" };
+        yield { type: "done", cost: 0.0001 };
+      });
 
-    const res = await dialogueApp.request("/v1/dialogue", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        persona_id: "dona_rosa_tendera",
-        scene: { time: "06:00", place: "pueblo" },
-        query: "Hola",
-      }),
-    });
+      const res = await dialogueApp.request("/v1/dialogue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          persona_id: "dona_rosa_tendera",
+          scene: { time: "06:00", place: "pueblo" },
+          query: "Hola",
+        }),
+      });
 
-    expect(res.status).toBe(200);
-    const text = await res.text();
-    expect(text).toContain('"text":"buenos dias"');
-    expect(text).toContain('"cost":');
-  });
+      expect(res.status).toBe(200);
+      const text = await res.text();
+      expect(text).toContain('"text":"buenos dias"');
+      expect(text).toContain('"cost":');
+    }
+  );
 
   it("graceful degradation when getPersonaState throws on every request", async () => {
     getPersonaStateMock.mockRejectedValue(new Error("DDB down"));

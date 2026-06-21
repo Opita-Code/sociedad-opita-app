@@ -74,7 +74,14 @@ describe("GET /v1/cities/tello/personas", () => {
   it("includes Dona Rosa (super-spreader #1)", async () => {
     const res = await app.request("/v1/cities/tello/personas");
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { personas: Array<{ persona_id: string; archetype: string; muletillas: string[]; network: { betweenness: number } }> };
+    const body = (await res.json()) as {
+      personas: Array<{
+        persona_id: string;
+        archetype: string;
+        muletillas: string[];
+        network: { betweenness: number };
+      }>;
+    };
     const rosa = body.personas.find((p) => p.persona_id === "dona_rosa_tendera");
     expect(rosa).toBeDefined();
     expect(rosa?.archetype).toBe("tendero_pueblo");

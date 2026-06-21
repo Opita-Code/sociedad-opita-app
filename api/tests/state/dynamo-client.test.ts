@@ -178,10 +178,7 @@ describe("dynamo-client.getItem", () => {
     sendMock.mockResolvedValueOnce({
       Item: { pk: "X", sk: "Y", name: "rosa" },
     });
-    const result = await getItem<{ pk: string; sk: string; name: string }>(
-      "X",
-      "Y",
-    );
+    const result = await getItem<{ pk: string; sk: string; name: string }>("X", "Y");
     expect(result).toEqual({ pk: "X", sk: "Y", name: "rosa" });
   });
 
@@ -305,9 +302,7 @@ describe("dynamo-client.queryByPartition (primary index)", () => {
     sendMock.mockResolvedValueOnce({
       Items: [{ pk: "ENTITY#CONV#c1", sk: "MSG#t1" }],
     });
-    const { queryByPartition } = await import(
-      "../../src/state/dynamo-client"
-    );
+    const { queryByPartition } = await import("../../src/state/dynamo-client");
     const result = await queryByPartition("ENTITY#CONV#c1");
     const input = lastQuery();
     expect(input.IndexName).toBeUndefined();
@@ -320,9 +315,7 @@ describe("dynamo-client.queryByPartition (primary index)", () => {
 
   it("supports begins_with(sk, prefix) when skPrefix given", async () => {
     sendMock.mockResolvedValueOnce({ Items: [] });
-    const { queryByPartition } = await import(
-      "../../src/state/dynamo-client"
-    );
+    const { queryByPartition } = await import("../../src/state/dynamo-client");
     await queryByPartition("ENTITY#CONV#c1", { skPrefix: "MSG#" });
     const input = lastQuery();
     expect(input.KeyConditionExpression).toContain("begins_with");
@@ -333,9 +326,7 @@ describe("dynamo-client.queryByPartition (primary index)", () => {
 
   it("supports scanForward option", async () => {
     sendMock.mockResolvedValueOnce({ Items: [] });
-    const { queryByPartition } = await import(
-      "../../src/state/dynamo-client"
-    );
+    const { queryByPartition } = await import("../../src/state/dynamo-client");
     await queryByPartition("ENTITY#CONV#c1", { scanForward: true });
     const input = lastQuery();
     expect(input.ScanIndexForward).toBe(true);
@@ -353,11 +344,10 @@ describe("dynamo-client.updateItem", () => {
 
   it("calls docClient.send with UpdateCommand + key + updates", async () => {
     sendMock.mockResolvedValueOnce({});
-    await updateItem(
-      "ENTITY#PERSONA#don_rosalio",
-      "STATE",
-      { emotionalState: "happy", lastSeen: "2025-06-21T12:00:00Z" },
-    );
+    await updateItem("ENTITY#PERSONA#don_rosalio", "STATE", {
+      emotionalState: "happy",
+      lastSeen: "2025-06-21T12:00:00Z",
+    });
     const input = lastUpdate();
     expect(input.TableName).toBe("TestTable");
     expect(input.Key).toEqual({ pk: "ENTITY#PERSONA#don_rosalio", sk: "STATE" });
@@ -400,7 +390,7 @@ describe("dynamo-client module-level setup", () => {
         marshallOptions: expect.objectContaining({
           removeUndefinedValues: true,
         }),
-      }),
+      })
     );
   });
 });

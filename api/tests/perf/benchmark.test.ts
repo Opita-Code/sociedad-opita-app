@@ -96,10 +96,7 @@ function makeSyntheticCorpus(n: number, dim: number, seed = 42): CorpusDoc[] {
 // ── Statistical helpers ────────────────────────────────────────────
 function percentile(sortedAsc: number[], p: number): number {
   if (sortedAsc.length === 0) return 0;
-  const idx = Math.min(
-    sortedAsc.length - 1,
-    Math.floor((p / 100) * sortedAsc.length),
-  );
+  const idx = Math.min(sortedAsc.length - 1, Math.floor((p / 100) * sortedAsc.length));
   return sortedAsc[idx]!;
 }
 
@@ -130,7 +127,7 @@ function mean(samples: number[]): number {
 // ── Real corpus artifact (for loadCorpusFromBuffer timing) ─────────
 const REAL_ARTIFACT_PATH = resolve(
   process.cwd(),
-  "../references/markitdown-corpus/corpus-embeddings.bge-m3-v1.json.gz",
+  "../references/markitdown-corpus/corpus-embeddings.bge-m3-v1.json.gz"
 );
 
 let realCorpusGz: Buffer | null = null;
@@ -145,8 +142,7 @@ beforeAll(() => {
 // ── Common test fixtures ───────────────────────────────────────────
 const persona = TELLO_PERSONAS[0]!;
 const scene: Scene = { time: "06:30", place: "Plaza de Tello" };
-const sampleQuery =
-  "Don Rosalío, ¿cuántas cabezas tiene su ganado este año en la finca?";
+const sampleQuery = "Don Rosalío, ¿cuántas cabezas tiene su ganado este año en la finca?";
 
 describe("performance baseline (Polish R3)", () => {
   // Wrap every perf `it` so CI skips the whole block.
@@ -175,7 +171,7 @@ describe("performance baseline (Polish R3)", () => {
     const s = summarize(samples);
     // Log for the runbook — fail loudly if budget drifts above 50 ms.
     console.log(
-      `  cosine retrieve p50=${s.p50.toFixed(2)}ms p95=${s.p95.toFixed(2)}ms p99=${s.p99.toFixed(2)}ms max=${s.max.toFixed(2)}ms`,
+      `  cosine retrieve p50=${s.p50.toFixed(2)}ms p95=${s.p95.toFixed(2)}ms p99=${s.p99.toFixed(2)}ms max=${s.max.toFixed(2)}ms`
     );
     expect(s.p95).toBeLessThan(50);
   });
@@ -207,7 +203,7 @@ describe("performance baseline (Polish R3)", () => {
     const s = summarize(samples);
     const m = mean(samples);
     console.log(
-      `  loadCorpusFromBuffer mean=${m.toFixed(2)}ms p50=${s.p50.toFixed(2)}ms p95=${s.p95.toFixed(2)}ms max=${s.max.toFixed(2)}ms (size=${realCorpusGz.length} bytes)`,
+      `  loadCorpusFromBuffer mean=${m.toFixed(2)}ms p50=${s.p50.toFixed(2)}ms p95=${s.p95.toFixed(2)}ms max=${s.max.toFixed(2)}ms (size=${realCorpusGz.length} bytes)`
     );
     // Cold-start budget — mean < 50 ms holds even on a busy laptop.
     // We assert the mean (not P95) because cold-start is one-shot; the
@@ -233,7 +229,7 @@ describe("performance baseline (Polish R3)", () => {
 
     const s = summarize(samples);
     console.log(
-      `  embedQuery (mocked) mean=${mean(samples).toFixed(3)}ms p95=${s.p95.toFixed(3)}ms max=${s.max.toFixed(3)}ms`,
+      `  embedQuery (mocked) mean=${mean(samples).toFixed(3)}ms p95=${s.p95.toFixed(3)}ms max=${s.max.toFixed(3)}ms`
     );
     expect(s.p95).toBeLessThan(10);
   });
@@ -253,7 +249,7 @@ describe("performance baseline (Polish R3)", () => {
 
     const s = summarize(samples);
     console.log(
-      `  buildContext mean=${mean(samples).toFixed(3)}ms p95=${s.p95.toFixed(3)}ms max=${s.max.toFixed(3)}ms`,
+      `  buildContext mean=${mean(samples).toFixed(3)}ms p95=${s.p95.toFixed(3)}ms max=${s.max.toFixed(3)}ms`
     );
     expect(s.p95).toBeLessThan(5);
   });
@@ -273,7 +269,7 @@ describe("performance baseline (Polish R3)", () => {
 
     const s = summarize(samples);
     console.log(
-      `  validateDialogueRequest mean=${mean(samples).toFixed(3)}ms p95=${s.p95.toFixed(3)}ms max=${s.max.toFixed(3)}ms`,
+      `  validateDialogueRequest mean=${mean(samples).toFixed(3)}ms p95=${s.p95.toFixed(3)}ms max=${s.max.toFixed(3)}ms`
     );
     expect(s.p95).toBeLessThan(1);
   });
@@ -297,9 +293,7 @@ describe("performance baseline (Polish R3)", () => {
       samples.push(performance.now() - t0);
     }
     const s = summarize(samples);
-    console.log(
-      `  cosine (1024-d) mean=${mean(samples).toFixed(3)}ms p95=${s.p95.toFixed(3)}ms`,
-    );
+    console.log(`  cosine (1024-d) mean=${mean(samples).toFixed(3)}ms p95=${s.p95.toFixed(3)}ms`);
     expect(mean(samples)).toBeLessThan(0.2);
     // topK sanity — must return 4 items with descending score.
     const items = Array.from({ length: 50 }, (_, i) => ({ score: i / 50 }));
