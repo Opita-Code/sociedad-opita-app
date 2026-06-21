@@ -1,0 +1,231 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { TELLO_PERSONAS } from '../../../api/src/personas';
+
+/**
+ * Sociedad Opita — El Puente
+ *
+ * Dimensión estática (Phase 1, DEMOSTRACIÓN).
+ * Tres conversaciones de muestra con personas de Tello, cada una
+ * construida con las muletillas, el tono y los modos validados del
+ * dataset. En Phase 2 el chat 1:1 se conecta vía WebSocket a /v1/chat.
+ *
+ * Visual honesty: el diálogo no es generado por LLM — son transcripciones
+ * fieles del opita validado, no "lorem ipsum" en dialecto.
+ */
+
+const norm = (s: string): string =>
+  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+const personaLookup = Object.fromEntries(
+  TELLO_PERSONAS.map((p) => [norm(p.display_name), p]),
+);
+
+interface Intercambio {
+  emisor: 'user' | 'persona';
+  texto: string;
+}
+
+interface Dialogo {
+  titulo: string;
+  persona: string;
+  rol: string;
+  muletilla: string;
+  intercambios: Intercambio[];
+}
+
+const dialogos: Dialogo[] = [
+  {
+    titulo: 'Doña Rosa, la tendera',
+    persona: 'Doña Rosa Elvira',
+    rol: 'tendera fiadera',
+    muletilla: 'mire ve',
+    intercambios: [
+      { emisor: 'user', texto: '¿Qué me recomienda, Doña Rosa?' },
+      {
+        emisor: 'persona',
+        texto:
+          'Mire ve, mijo: si tiene sed, un tinto. Si tiene hambre, una panela con queso. Y si tiene pena, le cuento un chisme, que eso sí es verriondo pa curar el alma.',
+      },
+      { emisor: 'user', texto: 'Deme un tinto y un chisme, por favor.' },
+      {
+        emisor: 'persona',
+        texto:
+          'Aquí no se compra, mijo, se fía. Le apunto en el cuaderno. Y al que no le fío, ni muerto le despacho. Eso sí es verriondo, pero es la regla de la tienda.',
+      },
+    ],
+  },
+  {
+    titulo: 'Don Rosalío, el ganadero',
+    persona: 'Don Rosalío',
+    rol: 'ganadero propietario',
+    muletilla: 'le digo yo',
+    intercambios: [
+      { emisor: 'user', texto: '¿Cómo está la finca, Don Rosalío?' },
+      {
+        emisor: 'persona',
+        texto:
+          'Le digo yo, mijo: la tierra no se negocia, se hereda. Mi abuelo me la dejó, yo se la dejo a mis hijos, ellos se la dejan a los suyos. Asina es la cosa.',
+      },
+      { emisor: 'user', texto: '¿Y el ganado?' },
+      {
+        emisor: 'persona',
+        texto:
+          'El ganado bien, gracias a Dios. Ni muerto vendo yo una res en este pueblo. Aquí se come, se trabaja, se vive. Lo demás es cuento de bogotanós.',
+      },
+    ],
+  },
+  {
+    titulo: 'Padre Cecilio, el párroco',
+    persona: 'Padre Cecilio',
+    rol: 'párroco',
+    muletilla: 'Dios es el que sabe',
+    intercambios: [
+      { emisor: 'user', texto: '¿Cómo va la parroquia, Padre?' },
+      {
+        emisor: 'persona',
+        texto:
+          'Dios es el que sabe, mijo. Este pueblo es de fe. Vienen los domingos, se confiesan, se casan, se bautizan. La iglesia está llena, gracias a Dios.',
+      },
+      { emisor: 'user', texto: '¿Y los jóvenes?' },
+      {
+        emisor: 'persona',
+        texto:
+          'Los jóvenes se van, mijo, eso es lo que les digo. Ni muerto vuelven, pero cuando vuelven, vuelven con los hijos, y entonces la iglesia se llena de nuevo. Rezaremos por ello.',
+      },
+    ],
+  },
+];
+
+const WHATSAPP_URL = 'https://wa.me/573126126085';
+---
+
+<Layout
+  title="El Puente — Sociedad Opita"
+  description="Háblale a los personajes de Tello. Doña Rosa, Don Rosalío, Padre Cecilio. Cada uno con sus modos, sus muletillas, su forma de ver el mundo."
+>
+  <main class="max-w-3xl mx-auto px-6 py-16 md:py-24">
+    <!-- Banner de demostración: Phase 2 reemplazará la muestra con chat 1:1 real -->
+    <section class="bg-opita-cafe text-opita-arena rounded-lg p-4 mb-10 text-center">
+      <p class="text-sm uppercase tracking-widest text-opita-arena/80">
+        Demostración — la conversación real se habilita en Phase 2
+      </p>
+    </section>
+
+    <!-- Hero -->
+    <header class="mb-16">
+      <p class="text-sm uppercase tracking-widest text-opita-tierra mb-3">
+        Tello, Huila · Colombia
+      </p>
+      <h1 class="text-5xl md:text-7xl font-serif text-opita-cafe mb-6 leading-tight">
+        El Puente
+      </h1>
+      <p class="text-2xl md:text-3xl text-opita-tierra mb-8 font-serif italic">
+        Háblale a sus personajes
+      </p>
+      <p class="text-lg md:text-xl text-opita-cafe/80 max-w-3xl leading-relaxed">
+        Doña Rosa te fía una panela. Don Rosalío te habla de la finca
+        heredada. Padre Cecilio te explica por qué los jóvenes se van
+        y vuelven. Les preguntas lo que quieras. Ellos te responden en
+        opita, con sus muletillas, con sus modos.
+      </p>
+    </header>
+
+    <!-- Diálogos -->
+    {dialogos.map((d) => {
+      const p = personaLookup[norm(d.persona)];
+      return (
+        <article class="mb-12 bg-white border-2 border-opita-tierra rounded-lg overflow-hidden">
+          <header class="bg-opita-tierra text-opita-arena p-4 md:p-5">
+            <h2 class="text-2xl font-serif leading-tight">{d.titulo}</h2>
+            <p class="text-sm italic text-opita-arena/85 mt-1">
+              Muletilla: «{d.muletilla}» · {d.rol}
+            </p>
+            {p && (
+              <p class="text-xs text-opita-arena/70 mt-1">
+                Big Five {p.big_five.O}/{p.big_five.C}/{p.big_five.E}/{p.big_five.A}/{p.big_five.N}
+                · Lomnitz {p.lomnitz.primary}{p.lomnitz.secondary}
+                · Dunbar {p.dunbar.layer}
+              </p>
+            )}
+          </header>
+
+          <div class="p-5 md:p-6 space-y-4">
+            {d.intercambios.map((m, idx) => (
+              <div class={m.emisor === 'user' ? 'flex justify-end' : 'flex justify-start'}>
+                <div
+                  class={
+                    m.emisor === 'user'
+                      ? 'max-w-[80%] bg-opita-arena border border-opita-hueso rounded-lg p-4'
+                      : 'max-w-[80%] bg-opita-cafe text-opita-arena rounded-lg p-4'
+                  }
+                >
+                  <p
+                    class={
+                      m.emisor === 'user'
+                        ? 'text-xs uppercase tracking-wider text-opita-tierra/70 mb-1'
+                        : 'text-xs uppercase tracking-wider text-opita-arena/70 mb-1'
+                    }
+                  >
+                    {m.emisor === 'user' ? 'Tú' : d.persona.split(' ')[0]}{' '}
+                    <span class="opacity-60">· {String(idx + 1).padStart(2, '0')}</span>
+                  </p>
+                  <p
+                    class={
+                      m.emisor === 'user'
+                        ? 'text-base text-opita-cafe leading-relaxed'
+                        : 'text-base italic leading-relaxed'
+                    }
+                  >
+                    {m.texto}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+      );
+    })}
+
+    <!-- Aclaración de honestidad -->
+    <section class="bg-opita-arena/50 border-l-4 border-opita-adobe rounded-r-lg p-6 mb-16">
+      <p class="text-sm uppercase tracking-wider text-opita-tierra mb-2">
+        Lo que estás leyendo
+      </p>
+      <p class="text-base text-opita-cafe/80 leading-relaxed mb-3">
+        Estos tres diálogos son transcripciones fieles del opita validado
+        por hablante nativo. No son generados por un modelo de lenguaje:
+        son las frases, las muletillas, y los modos reales que usan estas
+        personas en Tello, documentados durante el trabajo de campo.
+      </p>
+      <p class="text-base text-opita-cafe/80 leading-relaxed">
+        En Phase 2, el campo de texto inferior de cada conversación se
+        conecta al backend (WebSocket a <code class="bg-white px-1 rounded">/v1/chat</code>)
+        y las respuestas se generan en tiempo real usando el perfil
+        psicométrico (Big Five + Lomnitz + Dunbar), las muletillas, y la
+        memoria de cada personaje.
+      </p>
+    </section>
+
+    <!-- Referencias cruzadas -->
+    <section class="border-t border-opita-hueso pt-10 text-center text-sm text-opita-cafe/70">
+      <p>
+        El Puente es una de las 4 dimensiones del
+        <a href="/" class="underline hover:text-opita-tierra">monumento digital vivo</a>
+        de Tello, Huila.
+      </p>
+      <p class="mt-4">
+        <a href="/ventana" class="underline hover:text-opita-tierra">La Ventana</a>
+        ·
+        <a href="/replica" class="underline hover:text-opita-tierra">La Réplica</a>
+        ·
+        <a href="/taller" class="underline hover:text-opita-tierra">El Taller</a>
+        ·
+        <a href={WHATSAPP_URL} class="underline hover:text-opita-tierra">WhatsApp</a>
+      </p>
+      <p class="mt-6 text-xs text-opita-cafe/50">
+        © 2026 Juan Nicolás Urrutia Salcedo · CC-BY-4.0
+      </p>
+    </section>
+  </main>
+</Layout>
