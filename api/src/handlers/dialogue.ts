@@ -75,7 +75,8 @@
 import { Hono, type Context } from "hono";
 import { ocaisStream } from "../llm/provider";
 import { estimateCost } from "../llm/cost-tracker";
-import { retrieve, loadCorpus } from "../rag/retrieve";
+import { LLM_MODEL, LLM_CONFIG } from "../llm/config";
+import { retrieve, loadCorpusFromBuffer } from "../rag/retrieve";
 import { embedQuery } from "../rag/embed-query";
 import { buildContext, type Scene } from "../context/builder";
 import { TELLO_PERSONAS } from "../personas";
@@ -84,22 +85,31 @@ import { appendTurn } from "../state/conversation";
 import { validateDialogueRequest } from "./validation";
 import { cost } from "../observability/cost";
 import { getDialogueRateLimiter } from "../llm/rate-limiter";
+// The corpus gz is embedded in the Lambda bundle by esbuild's `binary`
+// loader (configured in sst.config.ts). ~1MB Uint8Array, parsed once at
+// module init. See api/src/assets/corpus.bge-m3-v1.json.gz for the
+// build-time artifact and scripts/embed-corpus.ts for how it's produced.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore — esbuild resolves this at bundle time
+import corpusGz from "../assets/corpus.bge-m3-v1.json.gz";
 
 const app = new Hono();
 
-type Corpus = Awaited<ReturnType<typeof loadCorpus>>;
+type Corpus = Awaited<ReturnType<typeof loadCorpusFromBuffer>>;
 let corpusCache: Corpus | null = null;
 
-const DEFAULT_CORPUS_PATH = "references/markitdown-corpus/corpus-embeddings.bge-m3-v1.json.gz";
-
 /**
- * Lazy-load + memoize the corpus in module scope. One disk read per
- * Lambda cold start; subsequent calls reuse the in-memory array.
+ * Parse the embedded corpus once at module init. The bytes were
+ * produced by scripts/embed-corpus.ts (Xenova/bge-m3 q8, L2-normalized,
+ * 1024d) and bundled by esbuild. This runs ~1× per Lambda cold start
+ * (~50ms) and the parsed array is reused for the warm lifetime of the
+ * container.
  */
 async function getOrLoadCorpus(): Promise<Corpus> {
   if (corpusCache) return corpusCache;
-  const path = process.env.CORPUS_PATH ?? DEFAULT_CORPUS_PATH;
-  corpusCache = await loadCorpus(path);
+  // corpusGz is a Uint8Array (esbuild binary loader). Pass it directly
+  // to loadCorpusFromBuffer to skip the disk-read path.
+  corpusCache = await loadCorpusFromBuffer(corpusGz as Uint8Array, "embedded:bge-m3-v1");
   return corpusCache;
 }
 
@@ -209,7 +219,7 @@ app.post("/v1/dialogue", async (c: Context) => {
               controller.enqueue(
                 encoder.encode(
                   `data: ${JSON.stringify({
-                    cost: estimateCost(fullText, "deepseek-chat"),
+                    cost: estimateCost(fullText, LLM_MODEL.name),
                     latency: 0,
                   })}\n\n`
                 )
@@ -217,17 +227,17 @@ app.post("/v1/dialogue", async (c: Context) => {
 
               // Polish R9 (HIGH #2): record the cost via the observability
               // client. We estimate tokens_out from the full text length
-              // (4 chars per token — the same heuristic DeepSeek's pricing
-              // docs use for English; close enough for Spanish colonial
-              // dialect and consistently slightly over-counts, which is
-              // the safe direction). tokens_in is 0 today because the
-              // OCAIS provider does not surface the upstream usage
-              // envelope; the existing estimateCost() handles that case
-              // correctly (it only counts tokens_out).
+              // (4 chars per token — the same heuristic the upstream
+              // pricing docs use for English; close enough for Spanish
+              // colonial dialect and consistently slightly over-counts,
+              // which is the safe direction). tokens_in is 0 today
+              // because the OCAIS provider does not surface the upstream
+              // usage envelope; the existing estimateCost() handles that
+              // case correctly (it only counts tokens_out).
               const tokensOut = Math.ceil(fullText.length / 4);
               if (tokensOut > 0) {
                 cost.recordInvocation({
-                  model: "deepseek-chat",
+                  model: LLM_MODEL.name,
                   tokens_out: tokensOut,
                   conv_id,
                   persona_id,

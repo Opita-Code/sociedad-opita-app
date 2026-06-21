@@ -21,16 +21,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const { ocaisStreamMock } = vi.hoisted(() => ({ ocaisStreamMock: vi.fn() }));
 vi.mock("../../src/llm/provider", () => ({ ocaisStream: ocaisStreamMock }));
 
-const { embedQueryMock, retrieveMock, loadCorpusMock } = vi.hoisted(() => ({
+const { embedQueryMock, retrieveMock, loadCorpusFromBufferMock } = vi.hoisted(() => ({
   embedQueryMock: vi.fn(),
   retrieveMock: vi.fn(),
-  loadCorpusMock: vi.fn(),
+  loadCorpusFromBufferMock: vi.fn(),
 }));
 vi.mock("../../src/rag/retrieve", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../src/rag/retrieve")>();
   return {
     ...actual,
-    loadCorpus: loadCorpusMock,
+    loadCorpusFromBuffer: loadCorpusFromBufferMock,
     retrieve: retrieveMock,
   };
 });
@@ -84,6 +84,7 @@ vi.mock("../../src/llm/rate-limiter", async (importOriginal) => {
 
 import { TELLO_PERSONAS } from "../../src/personas";
 import type { CorpusDoc } from "../../src/rag/types";
+import { LLM_MODEL } from "../../src/llm/config";
 
 let dialogueApp: typeof import("../../src/handlers/dialogue").default;
 
@@ -108,14 +109,14 @@ beforeEach(async () => {
   ocaisStreamMock.mockReset();
   embedQueryMock.mockReset();
   retrieveMock.mockReset();
-  loadCorpusMock.mockReset();
+  loadCorpusFromBufferMock.mockReset();
   getPersonaStateMock.mockReset();
   appendTurnMock.mockReset();
   costRecordInvocationMock.mockReset();
   tokenBucketTryConsumeMock.mockReset();
   tokenBucketResetMock.mockReset();
 
-  loadCorpusMock.mockResolvedValue([VALID_DOC]);
+  loadCorpusFromBufferMock.mockResolvedValue([VALID_DOC]);
   embedQueryMock.mockResolvedValue(new Float32Array([0.1, 0.2, 0.3]));
   retrieveMock.mockReturnValue([{ doc: VALID_DOC, score: 0.91 }]);
   getPersonaStateMock.mockResolvedValue({
@@ -172,7 +173,7 @@ describe("Polish R9 — cost.recordInvocation() integration", () => {
     await res.text();
     expect(costRecordInvocationMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "deepseek-chat",
+        model: LLM_MODEL.name,
         tokens_out: 10,
       })
     );

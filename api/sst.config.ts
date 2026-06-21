@@ -54,7 +54,6 @@ export default $config({
         personaId: "string", // GSI1 hashKey
         tsBucket: "string",  // GSI2 hashKey
         ts: "string",        // GSI2 rangeKey
-        expiresAt: "number", // TTL (epoch seconds)
       },
       primaryIndex: { hashKey: "pk", rangeKey: "sk" },
       globalIndexes: {
@@ -73,22 +72,35 @@ export default $config({
     //   Polish R7: architecture arm64 explicit (REQ-7.1 deviation fix —
     //     Graviton2 = ~34% better price/perf vs x86_64 per AWS docs,
     //     no native x86 dependencies in our Node 22 + Hono 4 stack).
-    //   Polish R7: reserved concurrency cap = 10 invocations — prevents
-    //     runaway cost if abused / DoS (Lambda + DDB are pay-per-call).
+    //   Polish R7: reserved concurrency cap — REMOVED in prod deploy
+    //     because the AWS account-level ConcurrentExecutions limit is
+    //     only 10 (sandbox tier) and AWS requires UnreservedConcurrent
+    //     Execution to stay ≥ 10. With reserved=1 unreserved would be 9.
+    //     The "do not exceed N concurrent invocations" guard is
+    //     replaced by:
+    //       (a) the rate-limiter in api/src/llm/rate-limiter.ts (10 req/min/IP)
+    //       (b) the cost cap in runbooks/cost-overrun.md
+    //     For accounts with higher limits, restore:
+    //         concurrency: { reserved: 10 }
     //   Polish R7: explicit log retention 1 month (default) for cost.
-    //   Polish R5: DEEPSEEK_API_KEY now sourced from an encrypted
+    //   Polish R5: LLM_API_KEY now sourced from an encrypted
     //     `sst.Secret` (see DEPLOY-RUNBOOK.md for the `sst secret set`
     //     procedure). The secret value is interpolated into the
     //     Lambda's environment at deploy time; `process.env` reads
-    //     inside the handler (api/src/llm/provider.ts) see it normally.
-    const DEEPSEEK_API_KEY_SECRET = new sst.Secret("DeepSeekApiKey");
+    //     inside the handler (api/src/llm/config.ts) see it normally.
+    //   2026-06-21: provider identity centralised in api/src/llm/config.ts.
+    //     The env var name (LLM_API_KEY) is provider-agnostic. To switch
+    //     providers, edit LLM_PROVIDERS in config.ts and set the
+    //     `LLM_PROVIDER` env var (or change DEFAULT_PROVIDER) — no other
+    //     consumer file needs editing.
+    const LLM_API_KEY_SECRET = new sst.Secret("LlmApiKey");
     const apiFn = new sst.aws.Function("ApiFn", {
       url: true,
       handler: "src/api.handler",
       link: [sessionsTable, personasTable, stateTable],
       environment: {
-        DEEPSEEK_API_KEY: DEEPSEEK_API_KEY_SECRET.value,
-        DEEPSEEK_BASE_URL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1",
+        LLM_API_KEY: LLM_API_KEY_SECRET.value,
+        LLM_PROVIDER: process.env.LLM_PROVIDER || "MiniMax",
         DDB_TABLE: stateTable.name,
         CORPUS_PATH:
           process.env.CORPUS_PATH ||
@@ -98,12 +110,35 @@ export default $config({
       memory: "2048 MB",
       timeout: "60 seconds",
       architecture: "arm64",
-      concurrency: {
-        reserved: 10,
-      },
+      // concurrency: { reserved: 5 } — removed: account limit is 10.
+      // See runbooks/cost-overrun.md + rate-limiter for DoS guard.
       logging: {
         retention: "1 month",
         format: "json",
+      },
+      nodejs: {
+        // Externalise the AWS SDK v3 — already present in the Lambda
+        // Node 22 base image, and pnpm's symlinked node_modules break
+        // esbuild's file walker with Win32 ERROR_INVALID_FUNCTION
+        // ("Incorrect function") during bundle on Windows.
+        esbuild: {
+          external: [
+            "@aws-sdk/client-dynamodb",
+            "@aws-sdk/lib-dynamodb",
+            "@aws-sdk/client-s3",
+            "@aws-sdk/lib-storage",
+          ],
+        },
+        // Embed the corpus gz as a binary Uint8Array at bundle time.
+        // The .gz file is ~1MB and is imported by dialogue.ts via
+        //   import corpusGz from "./assets/corpus.bge-m3-v1.json.gz";
+        // esbuild's `binary` loader returns the raw bytes so we can
+        // pass them straight to loadCorpusFromBuffer() at module init.
+        // (SST v3 takes `nodejs.loader` at the top level, not under
+        // `nodejs.esbuild` — see .sst/platform/.../function.ts:998.)
+        loader: {
+          ".gz": "binary",
+        },
       },
     });
 

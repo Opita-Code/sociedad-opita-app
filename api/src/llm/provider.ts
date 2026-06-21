@@ -19,6 +19,7 @@
  */
 import { streamText, openai, OCAISProviderError, OCAISError } from "@opita/ocais";
 import { estimateCost } from "./cost-tracker";
+import { LLM_CONFIG, LLM_MODEL, getLlmApiKey, getDefaultTemperature } from "./config";
 
 export interface OcaisStreamOptions {
   system: string;
@@ -29,8 +30,6 @@ export interface OcaisStreamOptions {
 
 export type OcaisChunk = { type: "text"; text: string } | { type: "done"; cost: number };
 
-const DEFAULT_MODEL = "deepseek-chat";
-const DEFAULT_TEMPERATURE = 1.3;
 const MAX_ATTEMPTS = 3;
 const BASE_BACKOFF_MS = 1000;
 
@@ -53,16 +52,19 @@ async function sleep(ms: number): Promise<void> {
 }
 
 export async function* ocaisStream(opts: OcaisStreamOptions): AsyncGenerator<OcaisChunk> {
-  const model = opts.model ?? DEFAULT_MODEL;
-  const temperature = opts.temperature ?? DEFAULT_TEMPERATURE;
+  const model = opts.model ?? LLM_CONFIG.defaultModel;
+  const temperature = opts.temperature ?? getDefaultTemperature(model);
 
   let lastError: unknown;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       const stream = streamText({
         provider: openai({
-          apiKey: process.env.DEEPSEEK_API_KEY ?? "",
-          baseURL: process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com/v1",
+          // The provider, model, baseURL, and env-var-name for the key
+          // are all read from LLM_CONFIG. To add or switch a provider,
+          // edit api/src/llm/config.ts only.
+          apiKey: getLlmApiKey(),
+          baseURL: LLM_CONFIG.baseURL,
         }),
         model,
         system: opts.system,
